@@ -6,7 +6,6 @@ import {
   InputAdornment,
   Container,
   IconButton,
-  ClickAwayListener,
   Menu,
   MenuItem,
   ListItemIcon,
@@ -94,7 +93,7 @@ function App() {
         .then(response => response.text())
         .then(result => {
           // 从README.md中提取图片URL
-          const match = result.match(/\!\[.*?\]\((.*?)\)/);
+          const match = result.match(/!\[.*?\]\((.*?)\)/);
           if (match && match[1]) {
             setWallpaperUrl(match[1]);
           }
