@@ -233,52 +233,70 @@ function App() {
         }
         
         // 需要获取新壁纸
-        fetch("https://raw.onmicrosoft.cn/Bing-Wallpaper-Action/main/README.md")
-          .then(response => {
-            if (!response.ok) {
-              throw new Error(`网络请求失败: ${response.status}`);
-            }
-            return response.text();
-          })
-          .then(result => {
-            try {
-              // 从README.md中提取图片URL
-              const match = result.match(/!\[.*?\]\((.*?)\)/);
-              if (match && match[1]) {
-                const newUrl = match[1];
-                setWallpaperUrl(newUrl);
-                
-                // 保存新壁纸URL和更新日期到localStorage
-                try {
-                  const wallpaperData = {
-                    url: newUrl,
-                    lastUpdated: new Date().toISOString()
-                  };
-                  localStorage.setItem('wallpaperData', JSON.stringify(wallpaperData));
-                } catch (storageError) {
-                  console.error('保存壁纸数据失败:', storageError);
-                }
-              } else {
-                throw new Error('无法解析壁纸URL');
+        const fetchWallpaper = (retryCount = 0) => {
+          fetch("https://raw.onmicrosoft.cn/Bing-Wallpaper-Action/main/README.md")
+            .then(response => {
+              if (!response.ok) {
+                throw new Error(`网络请求失败: ${response.status} ${response.statusText}`);
               }
-            } catch (parseError) {
-              console.error('解析壁纸数据失败:', parseError);
-              if (savedUrl) setWallpaperUrl(savedUrl);
-            }
-          })
-          .catch(error => {
-            console.error('获取必应壁纸失败:', error);
-            // 如果获取失败但有保存的壁纸，则使用保存的
-            if (savedUrl) {
-              setWallpaperUrl(savedUrl);
-            }
-          });
+              return response.text();
+            })
+            .then(result => {
+              try {
+                // 从README.md中提取图片URL
+                const match = result.match(/!\[.*?\]\((.*?)\)/);
+                if (match && match[1]) {
+                  const newUrl = match[1];
+                  setWallpaperUrl(newUrl);
+                  
+                  // 保存新壁纸URL和更新日期到localStorage
+                  try {
+                    const wallpaperData = {
+                      url: newUrl,
+                      lastUpdated: new Date().toISOString()
+                    };
+                    localStorage.setItem('wallpaperData', JSON.stringify(wallpaperData));
+                  } catch (storageError) {
+                    console.error('保存壁纸数据失败:', storageError);
+                  }
+                } else {
+                  throw new Error('无法解析壁纸URL');
+                }
+              } catch (parseError) {
+                console.error('解析壁纸数据失败:', parseError);
+                if (savedUrl) setWallpaperUrl(savedUrl);
+              }
+            })
+            .catch(error => {
+              console.error(`获取必应壁纸失败 (尝试 ${retryCount + 1}/3):`, error);
+              
+              // 如果失败次数小于3次，则进行重试
+              if (retryCount < 2) {
+                setTimeout(() => {
+                  fetchWallpaper(retryCount + 1);
+                }, 1000 * (retryCount + 1)); // 逐渐增加重试间隔
+              } else {
+                // 最终失败，使用保存的壁纸（如果有）
+                if (savedUrl) {
+                  setWallpaperUrl(savedUrl);
+                  console.log('使用缓存的壁纸');
+                }
+              }
+            });
+        };
+        
+        // 开始获取壁纸
+        fetchWallpaper();
+        
       } catch (error) {
         console.error('处理壁纸更新逻辑出错:', error);
         // 尝试使用已保存的壁纸
         try {
           const { url: savedUrl } = getSavedWallpaperData();
-          if (savedUrl) setWallpaperUrl(savedUrl);
+          if (savedUrl) {
+            setWallpaperUrl(savedUrl);
+            console.log('因错误使用缓存的壁纸');
+          }
         } catch (e) {
           console.error('无法获取保存的壁纸:', e);
         }
@@ -389,19 +407,19 @@ function App() {
     
     // 模拟连接测试 - 实际应用中应实现真正的WebDAV连接测试
     setTimeout(() => {
-      // 简单验证服务器地址是否为WebDAV
-      const isWebDAV = webDAVSettings.server.includes('jianguoyun.com');
+      // 验证服务器地址是否包含有效URL格式
+      const isValidURL = webDAVSettings.server.startsWith('http://') || webDAVSettings.server.startsWith('https://');
       setTestResult({ 
         show: true, 
-        success: isWebDAV, 
-        message: isWebDAV ? 'WebDAV连接测试成功' : '连接失败，请确认服务器地址' 
+        success: isValidURL, 
+        message: isValidURL ? 'WebDAV连接测试成功' : '连接失败，请确认服务器地址格式' 
       });
     }, 800);
   };
   
   const saveWebDAVSettings = () => {
     // 验证必填字段
-    if (!webDAVSettings.server || !webDAVSettings.server.includes('jianguoyun.com')) {
+    if (!webDAVSettings.server || !(webDAVSettings.server.startsWith('http://') || webDAVSettings.server.startsWith('https://'))) {
       setTestResult({ 
         show: true, 
         success: false, 
@@ -666,137 +684,175 @@ function App() {
       
       {/* 主要搜索区域 */}
       <Container maxWidth="md" sx={{ 
-        display: 'flex', 
-        flexDirection: 'column', 
-        alignItems: 'center', 
-        justifyContent: 'center',
-        minHeight: '100vh',
-        py: 3
+        height: '100vh',
+        position: 'relative'
       }}>
-        <Box component="form" onSubmit={handleSearch} sx={{ width: '100%', maxWidth: 600, position: 'relative' }}>
-          <Paper 
-            ref={searchRef} 
-            elevation={3}
-            sx={{ 
-              borderRadius: 28,
-              backgroundColor: actualDarkMode ? 'rgba(30, 30, 30, 0.8)' : 'rgba(255, 255, 255, 0.8)',
-              boxShadow: useBingWallpaper ? '0 4px 20px rgba(0, 0, 0, 0.2)' : undefined,
-              position: 'relative',
-              transition: 'box-shadow 0.3s ease-in-out',
-              '&:hover': {
-                boxShadow: actualDarkMode 
-                  ? '0 0 15px 5px rgba(100, 181, 246, 0.6), 0 0 30px 10px rgba(100, 181, 246, 0.2)' 
-                  : '0 0 15px 5px rgba(33, 150, 243, 0.4), 0 0 30px 10px rgba(33, 150, 243, 0.1)'
-              },
-              // 荧光脉冲动画效果
-              '@keyframes pulse': {
-                '0%': {
+        {/* 搜索框居中定位 */}
+        <Box sx={{
+          position: 'absolute',
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          width: '100%'
+        }}>
+          {/* Mvianav 文字Logo */}
+          <Box sx={{ 
+            display: 'flex', 
+            justifyContent: 'center',
+            fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif',
+            fontWeight: 500,
+            fontSize: { xs: '5rem', sm: '6rem', md: '7rem' },
+            letterSpacing: '-2px',
+            textShadow: '1px 1px 2px rgba(0,0,0,0.1)',
+            width: 'auto',
+            maxWidth: '100%',
+            height: 'auto',
+            minHeight: { xs: '80px', sm: '90px', md: '100px' },
+            alignItems: 'center',
+            overflow: 'visible',
+            transform: 'translateY(-90%)',
+            marginBottom: { xs: '-70px', sm: '-75px', md: '-80px' },
+            position: 'relative',
+            zIndex: 1
+          }}>
+            <Typography component="span" sx={{ color: '#4285F4', lineHeight: 0.8, fontSize: 'inherit' }}>M</Typography>
+            <Typography component="span" sx={{ color: '#EA4335', lineHeight: 0.8, fontSize: 'inherit' }}>v</Typography>
+            <Typography component="span" sx={{ color: '#FBBC05', lineHeight: 0.8, fontSize: 'inherit' }}>i</Typography>
+            <Typography component="span" sx={{ color: '#4285F4', lineHeight: 0.8, fontSize: 'inherit' }}>a</Typography>
+            <Typography component="span" sx={{ color: '#34A853', lineHeight: 0.8, fontSize: 'inherit' }}>n</Typography>
+            <Typography component="span" sx={{ color: '#EA4335', lineHeight: 0.8, fontSize: 'inherit' }}>a</Typography>
+            <Typography component="span" sx={{ color: '#4285F4', lineHeight: 0.8, fontSize: 'inherit' }}>v</Typography>
+          </Box>
+          
+          {/* 搜索框表单 */}
+          <Box component="form" onSubmit={handleSearch} sx={{ width: '100%', maxWidth: 600, position: 'relative', zIndex: 2 }}>
+            <Paper 
+              ref={searchRef} 
+              elevation={3}
+              sx={{ 
+                borderRadius: 28,
+                backgroundColor: actualDarkMode ? 'rgba(30, 30, 30, 0.8)' : 'rgba(255, 255, 255, 0.8)',
+                boxShadow: useBingWallpaper ? '0 4px 20px rgba(0, 0, 0, 0.2)' : undefined,
+                position: 'relative',
+                transition: 'box-shadow 0.3s ease-in-out',
+                '&:hover': {
                   boxShadow: actualDarkMode 
-                    ? '0 0 10px 2px rgba(100, 181, 246, 0.3)' 
-                    : '0 0 10px 2px rgba(33, 150, 243, 0.2)'
+                    ? '0 0 15px 5px rgba(100, 181, 246, 0.6), 0 0 30px 10px rgba(100, 181, 246, 0.2)' 
+                    : '0 0 15px 5px rgba(33, 150, 243, 0.4), 0 0 30px 10px rgba(33, 150, 243, 0.1)'
                 },
-                '50%': {
-                  boxShadow: actualDarkMode 
-                    ? '0 0 15px 5px rgba(100, 181, 246, 0.6)' 
-                    : '0 0 15px 5px rgba(33, 150, 243, 0.4)'
-                },
-                '100%': {
-                  boxShadow: actualDarkMode 
-                    ? '0 0 10px 2px rgba(100, 181, 246, 0.3)' 
-                    : '0 0 10px 2px rgba(33, 150, 243, 0.2)'
-                }
-              },
-              animation: 'pulse 3s infinite'
-            }}
-          >
-            <TextField
-              fullWidth
-              variant="outlined"
-              placeholder="搜索..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              onKeyPress={(e) => e.key === 'Enter' && handleSearch(e)}
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <IconButton onClick={handleSearchEngineMenuOpen} aria-label="选择搜索引擎" size="small">
-                      <Avatar 
-                        src={selectedSearchEngine.logo} 
-                        alt={selectedSearchEngine.name}
-                        sx={{ 
-                          width: 24, 
-                          height: 24,
-                          bgcolor: selectedSearchEngine.color
-                        }}
-                      >
-                        {selectedSearchEngine.name.charAt(0)}
-                      </Avatar>
-                    </IconButton>
-                    <Menu
-                      anchorEl={searchEngineMenuAnchor}
-                      open={Boolean(searchEngineMenuAnchor)}
-                      onClose={handleSearchEngineMenuClose}
-                    >
-                      {searchEngines.map((engine) => (
-                        <MenuItem 
-                          key={engine.id}
-                          onClick={() => handleSearchEngineSelect(engine)}
-                          selected={selectedSearchEngine.id === engine.id}
-                        >
-                          <ListItemIcon>
-                            <Avatar 
-                              src={engine.logo} 
-                              alt={engine.name}
-                              sx={{ 
-                                width: 24, 
-                                height: 24,
-                                bgcolor: engine.color
-                              }}
-                            >
-                              {engine.name.charAt(0)}
-                            </Avatar>
-                          </ListItemIcon>
-                          <ListItemText>{engine.name}</ListItemText>
-                        </MenuItem>
-                      ))}
-                    </Menu>
-                  </InputAdornment>
-                ),
-                endAdornment: (
-                  <InputAdornment position="end">
-                    <IconButton onClick={handleSearchIconClick} size="small">
-                      <SearchIcon sx={{ 
-                        color: actualDarkMode ? 'white' : 'rgba(0, 0, 0, 0.54)',
-                        fontSize: '1.2rem'
-                      }} />
-                    </IconButton>
-                  </InputAdornment>
-                ),
-                sx: { 
-                  borderRadius: 28,
-                  py: 0.5,
-                  pr: 0.5,
-                  '& .MuiOutlinedInput-notchedOutline': {
-                    borderColor: 'transparent',
+                // 荧光脉冲动画效果
+                '@keyframes pulse': {
+                  '0%': {
+                    boxShadow: actualDarkMode 
+                      ? '0 0 10px 2px rgba(100, 181, 246, 0.3)' 
+                      : '0 0 10px 2px rgba(33, 150, 243, 0.2)'
                   },
-                  '&:hover .MuiOutlinedInput-notchedOutline': {
-                    borderColor: 'transparent',
+                  '50%': {
+                    boxShadow: actualDarkMode 
+                      ? '0 0 15px 5px rgba(100, 181, 246, 0.6)' 
+                      : '0 0 15px 5px rgba(33, 150, 243, 0.4)'
                   },
-                  '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                    borderColor: 'transparent',
-                  },
-                  color: actualDarkMode ? 'white' : 'black',
-                  '& input::placeholder': {
-                    color: actualDarkMode ? 'rgba(255, 255, 255, 0.5)' : 'rgba(0, 0, 0, 0.4)',
-                    opacity: 1
-                  },
-                  '& .MuiSvgIcon-root': {
-                    color: actualDarkMode ? 'white' : 'rgba(0, 0, 0, 0.54)',
+                  '100%': {
+                    boxShadow: actualDarkMode 
+                      ? '0 0 10px 2px rgba(100, 181, 246, 0.3)' 
+                      : '0 0 10px 2px rgba(33, 150, 243, 0.2)'
                   }
-                }
+                },
+                animation: 'pulse 3s infinite'
               }}
-            />
-          </Paper>
+            >
+              <TextField
+                fullWidth
+                variant="outlined"
+                placeholder="搜索..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                onKeyPress={(e) => e.key === 'Enter' && handleSearch(e)}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <IconButton onClick={handleSearchEngineMenuOpen} aria-label="选择搜索引擎" size="small">
+                        <Avatar 
+                          src={selectedSearchEngine.logo} 
+                          alt={selectedSearchEngine.name}
+                          sx={{ 
+                            width: 24, 
+                            height: 24,
+                            bgcolor: selectedSearchEngine.color
+                          }}
+                        >
+                          {selectedSearchEngine.name.charAt(0)}
+                        </Avatar>
+                      </IconButton>
+                      <Menu
+                        anchorEl={searchEngineMenuAnchor}
+                        open={Boolean(searchEngineMenuAnchor)}
+                        onClose={handleSearchEngineMenuClose}
+                      >
+                        {searchEngines.map((engine) => (
+                          <MenuItem 
+                            key={engine.id}
+                            onClick={() => handleSearchEngineSelect(engine)}
+                            selected={selectedSearchEngine.id === engine.id}
+                          >
+                            <ListItemIcon>
+                              <Avatar 
+                                src={engine.logo} 
+                                alt={engine.name}
+                                sx={{ 
+                                  width: 24, 
+                                  height: 24,
+                                  bgcolor: engine.color
+                                }}
+                              >
+                                {engine.name.charAt(0)}
+                              </Avatar>
+                            </ListItemIcon>
+                            <ListItemText>{engine.name}</ListItemText>
+                          </MenuItem>
+                        ))}
+                      </Menu>
+                    </InputAdornment>
+                  ),
+                  endAdornment: (
+                    <InputAdornment position="end">
+                      <IconButton onClick={handleSearchIconClick} size="small">
+                        <SearchIcon sx={{ 
+                          color: actualDarkMode ? 'white' : 'rgba(0, 0, 0, 0.54)',
+                          fontSize: '1.2rem'
+                        }} />
+                      </IconButton>
+                    </InputAdornment>
+                  ),
+                  sx: { 
+                    borderRadius: 28,
+                    py: 0.5,
+                    pr: 0.5,
+                    '& .MuiOutlinedInput-notchedOutline': {
+                      borderColor: 'transparent',
+                    },
+                    '&:hover .MuiOutlinedInput-notchedOutline': {
+                      borderColor: 'transparent',
+                    },
+                    '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                      borderColor: 'transparent',
+                    },
+                    color: actualDarkMode ? 'white' : 'black',
+                    '& input::placeholder': {
+                      color: actualDarkMode ? 'rgba(255, 255, 255, 0.5)' : 'rgba(0, 0, 0, 0.4)',
+                      opacity: 1
+                    },
+                    '& .MuiSvgIcon-root': {
+                      color: actualDarkMode ? 'white' : 'rgba(0, 0, 0, 0.54)',
+                    }
+                  }
+                }}
+              />
+            </Paper>
+          </Box>
         </Box>
       </Container>
       
@@ -819,4 +875,4 @@ function App() {
   );
 }
 
-export default App; 
+export default App;
