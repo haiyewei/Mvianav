@@ -1,0 +1,6 @@
+[build]
+command = "npm run build:cf"
+publish = "build"
+
+[build.environment]
+NODE_VERSION = "18" 

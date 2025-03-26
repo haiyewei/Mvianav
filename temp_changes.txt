@@ -1,0 +1,38 @@
+// 添加的状态
+const [showWebDAVSettings, setShowWebDAVSettings] = useState(false);
+
+// 替换当前WebDAV菜单项的代码
+// 从这里:
+<MenuItem onClick={showWebDAVComingSoon}>
+  <ListItemIcon>
+    <CloudIcon />
+  </ListItemIcon>
+  <ListItemText primary="坚果云WebDAV" secondary="即将推出" />
+</MenuItem>
+
+// 改为:
+<MenuItem onClick={() => setShowWebDAVSettings(!showWebDAVSettings)}>
+  <ListItemIcon>
+    <CloudIcon />
+  </ListItemIcon>
+  <ListItemText primary="设置同步" secondary="通过坚果云WebDAV同步您的设置" />
+  {showWebDAVSettings ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+</MenuItem>
+
+<Collapse in={showWebDAVSettings} timeout="auto" unmountOnExit>
+  <Box sx={{ px: 2, py: 1 }}>
+    <Typography variant="body2" color="textSecondary" sx={{ mb: 2 }}>
+      此功能将允许您通过坚果云WebDAV服务在多个设备间同步搜索设置、壁纸偏好等。
+    </Typography>
+    <Button 
+      variant="contained" 
+      size="small"
+      fullWidth
+      onClick={showWebDAVComingSoon}
+      color="primary"
+      sx={{ mb: 1 }}
+    >
+      功能即将推出
+    </Button>
+  </Box>
+</Collapse> 
