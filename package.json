@@ -17,9 +17,8 @@
   },
   "scripts": {
     "start": "react-scripts start",
-    "build": "react-scripts build",
-    "build:clean": "npm run clean && react-scripts build",
-    "build:cf": "CI=false react-scripts build",
+    "build": "CI=false react-scripts build",
+    "build:clean": "npm run clean && CI=false react-scripts build",
     "clean": "rimraf build",
     "test": "react-scripts test",
     "eject": "react-scripts eject"

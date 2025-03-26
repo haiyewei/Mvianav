@@ -1,4 +1,6 @@
 import './App.css';
+/* eslint-disable react-hooks/exhaustive-deps */
+/* eslint-disable no-unused-vars */
 import { useState, useRef, useEffect } from 'react';
 import { 
   Box, 
@@ -283,7 +285,7 @@ function App() {
       // 当禁用必应壁纸时，清除壁纸URL
       setWallpaperUrl('');
     }
-  }, [useBingWallpaper]);
+  }, [useBingWallpaper, isWallpaperNeedsUpdate]);
   
   const handleSearch = (e) => {
     e.preventDefault();
@@ -410,14 +412,6 @@ function App() {
       show: true, 
       success: true, 
       message: '坚果云WebDAV设置已保存' 
-    });
-  };
-  
-  const showWebDAVComingSoon = () => {
-    setTestResult({ 
-      show: true, 
-      success: false, 
-      message: 'WebDAV设置同步功能尚未实现，敬请期待！' 
     });
   };
   
