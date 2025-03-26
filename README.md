@@ -2,6 +2,8 @@
 
 这是一个基于React开发的现代化导航起始页，提供了美观实用的搜索界面、个性化设置和云同步功能。
 
+**项目地址：** [https://github.com/haiyewei/Mvianav](https://github.com/haiyewei/Mvianav)
+
 ## 功能列表
 
 ### 已完成功能
