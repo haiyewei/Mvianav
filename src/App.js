@@ -125,12 +125,14 @@ function App() {
   const [settingsMenuAnchor, setSettingsMenuAnchor] = useState(null);
   const [darkMode, setDarkMode] = useState(getSavedDarkMode);
   const [useBingWallpaper, setUseBingWallpaper] = useState(getSavedBingWallpaper);
+  const [wallpaperOpacity, setWallpaperOpacity] = useState(getSavedBingWallpaper() ? 1 : 0);
   const [wallpaperUrl, setWallpaperUrl] = useState(() => {
     // 初始化时从localStorage加载壁纸URL
     const { url } = getSavedWallpaperData();
     return url || '';
   });
   const [showWebDAVSettings, setShowWebDAVSettings] = useState(false);
+  const [showSyncOptions, setShowSyncOptions] = useState(false);
   const [webDAVSettings, setWebDAVSettings] = useState(getSavedWebDAVSettings);
   const [testResult, setTestResult] = useState({ show: false, success: false, message: '' });
   
@@ -287,6 +289,13 @@ function App() {
     }
   }, [useBingWallpaper, isWallpaperNeedsUpdate]);
   
+  // 当壁纸URL更新时，如果开启了壁纸功能，则淡入显示
+  useEffect(() => {
+    if (useBingWallpaper && wallpaperUrl) {
+      setWallpaperOpacity(1);
+    }
+  }, [wallpaperUrl, useBingWallpaper]);
+  
   const handleSearch = (e) => {
     e.preventDefault();
     if (searchTerm.trim() !== '') {
@@ -329,7 +338,19 @@ function App() {
   };
   
   const handleBingWallpaperToggle = () => {
-    setUseBingWallpaper(!useBingWallpaper);
+    if (useBingWallpaper) {
+      // 关闭壁纸时，先淡出再更新状态
+      setWallpaperOpacity(0);
+      setTimeout(() => {
+        setUseBingWallpaper(false);
+      }, 500); // 与CSS过渡时间匹配
+    } else {
+      // 开启壁纸时，先更新状态再淡入
+      setUseBingWallpaper(true);
+      setTimeout(() => {
+        setWallpaperOpacity(1);
+      }, 50); // 短暂延迟确保状态更新
+    }
   };
   
   const handleWebDAVSettingsChange = (field) => (event) => {
@@ -435,7 +456,9 @@ function App() {
           backgroundRepeat: 'no-repeat',
           zIndex: -1,
           height: '100vh',
-          width: '100vw'
+          width: '100vw',
+          opacity: wallpaperOpacity,
+          transition: 'opacity 500ms ease-in-out'
         }}
       />
       
@@ -581,6 +604,61 @@ function App() {
                   保存连接
                 </Button>
               </Box>
+            </Box>
+          </Collapse>
+          
+          {/* 同步数据菜单 */}
+          <Divider sx={{ my: 1 }} />
+          <MenuItem onClick={() => setShowSyncOptions(!showSyncOptions)}>
+            <ListItemIcon>
+              <CloudIcon />
+            </ListItemIcon>
+            <ListItemText primary="同步数据" secondary="管理您的同步设置" />
+            {showSyncOptions ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+          </MenuItem>
+          
+          <Collapse in={showSyncOptions} timeout="auto" unmountOnExit>
+            <Box sx={{ px: 2, py: 1, display: 'flex', flexDirection: 'column', gap: 1 }}>
+              <Button 
+                variant="outlined" 
+                size="small"
+                fullWidth
+                startIcon={<CloudIcon />}
+              >
+                从云端同步
+              </Button>
+              <Button 
+                variant="outlined" 
+                size="small"
+                fullWidth
+                startIcon={<CloudIcon />}
+              >
+                同步到云端
+              </Button>
+              <Button 
+                variant="outlined" 
+                size="small"
+                fullWidth
+                startIcon={<CloudIcon />}
+              >
+                导入浏览器
+              </Button>
+              <Button 
+                variant="outlined" 
+                size="small"
+                fullWidth
+                startIcon={<CloudIcon />}
+              >
+                导出浏览器
+              </Button>
+              <Button 
+                variant="outlined" 
+                size="small"
+                fullWidth
+                startIcon={<CloudIcon />}
+              >
+                从云端导出
+              </Button>
             </Box>
           </Collapse>
         </Menu>

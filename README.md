@@ -1,70 +1,64 @@
-# Getting Started with Create React App
+﻿# Mvianav - 现代化的导航起始页
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+这是一个基于React开发的现代化导航起始页，提供了美观实用的搜索界面、个性化设置和云同步功能。
 
-## Available Scripts
+## 功能列表
 
-In the project directory, you can run:
+### 已完成功能
+- ✅ 搜索框 - 支持多搜索引擎(必应、谷歌、百度、搜狗)切换
+- ✅ 设置按钮 - 提供直观的设置界面
+- ✅ 每日一图 - 支持必应每日壁纸，带淡入淡出效果
+- ✅ 深浅模式 - 支持跟随系统、浅色和深色三种模式
+- ✅ WebDAV连通 - 与云存储服务对接基础功能
+
+### 待完成功能
+- ❌ 数据同步 - 通过WebDAV或浏览器同步设置和数据
+- ❌ WebDAV文件获取与上传 - 完整的文件同步功能
+- ❌ 书签展示 - 显示和管理用户书签
+- ❌ 历史展示 - 访问历史记录功能
+- ❌ 项目Logo - 设计和实现项目标识
+- ❌ 功能区展示 - 实用工具和快捷入口
+
+## 开始使用
 
 ### `npm start`
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+在开发模式下运行应用。
+打开 [http://localhost:3000](http://localhost:3000) 在浏览器中查看。
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+当你修改代码时，页面会自动重新加载。
+你也可以在控制台中看到任何lint错误。
 
 ### `npm test`
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+启动交互式测试运行器。
+查看[运行测试](https://facebook.github.io/create-react-app/docs/running-tests)章节获取更多信息。
 
 ### `npm run build`
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+将应用打包到`build`文件夹以用于生产环境。
+它会在生产模式下正确打包React并优化构建以获得最佳性能。
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+构建后的文件经过压缩，文件名包含哈希值。
+你的应用已经准备好部署了！
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+查看[部署](https://facebook.github.io/create-react-app/docs/deployment)章节获取更多信息。
 
-### `npm run eject`
+## 项目架构
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+项目使用React和Material-UI构建，主要结构包括：
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+- 主搜索界面 - 提供多搜索引擎支持和视觉效果
+- 设置菜单 - 管理应用首选项
+- WebDAV集成 - 提供云存储连接
+- 数据同步模块 - 管理设置和数据的同步
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+## 贡献指南
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+欢迎贡献代码或提出功能建议。请遵循以下步骤：
 
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
-
-### Code Splitting
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+1. Fork 项目
+2. 创建特性分支 (`git checkout -b feature/amazing-feature`)
+3. 提交更改 (`git commit -m 'Add some amazing feature'`)
+4. 推送到分支 (`git push origin feature/amazing-feature`)
+5. 开启Pull Request
