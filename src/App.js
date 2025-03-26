@@ -354,7 +354,7 @@ function App() {
       setTestResult({ 
         show: true, 
         success: false, 
-        message: '请输入坚果云账号和密码' 
+        message: '请输入WebDAV账号和密码' 
       });
       return;
     }
@@ -363,17 +363,17 @@ function App() {
     setTestResult({
       show: true,
       success: true,
-      message: '正在测试坚果云连接...'
+      message: '正在测试WebDAV连接...'
     });
     
     // 模拟连接测试 - 实际应用中应实现真正的WebDAV连接测试
     setTimeout(() => {
-      // 简单验证服务器地址是否为坚果云
-      const isJianguoyun = webDAVSettings.server.includes('jianguoyun.com');
+      // 简单验证服务器地址是否为WebDAV
+      const isWebDAV = webDAVSettings.server.includes('jianguoyun.com');
       setTestResult({ 
         show: true, 
-        success: isJianguoyun, 
-        message: isJianguoyun ? '坚果云连接测试成功' : '连接失败，请确认服务器地址' 
+        success: isWebDAV, 
+        message: isWebDAV ? 'WebDAV连接测试成功' : '连接失败，请确认服务器地址' 
       });
     }, 800);
   };
@@ -384,7 +384,7 @@ function App() {
       setTestResult({ 
         show: true, 
         success: false, 
-        message: '请使用坚果云WebDAV地址' 
+        message: '请使用有效的WebDAV地址' 
       });
       return;
     }
@@ -393,7 +393,7 @@ function App() {
       setTestResult({ 
         show: true, 
         success: false, 
-        message: '请输入坚果云账号和密码' 
+        message: '请输入WebDAV账号和密码' 
       });
       return;
     }
@@ -411,7 +411,7 @@ function App() {
     setTestResult({ 
       show: true, 
       success: true, 
-      message: '坚果云WebDAV设置已保存' 
+      message: 'WebDAV设置已保存' 
     });
   };
   
@@ -512,7 +512,7 @@ function App() {
             <ListItemIcon>
               <CloudIcon />
             </ListItemIcon>
-            <ListItemText primary="坚果云WebDAV" secondary="同步您的设置" />
+            <ListItemText primary="WebDAV" secondary="同步您的设置" />
             {showWebDAVSettings ? <ExpandLessIcon /> : <ExpandMoreIcon />}
           </MenuItem>
           
@@ -541,7 +541,7 @@ function App() {
                 sx={{ mb: 1 }}
               />
               <TextField
-                label="坚果云账号"
+                label="WebDAV账号"
                 variant="outlined"
                 size="small"
                 fullWidth
@@ -561,7 +561,7 @@ function App() {
                 value={webDAVSettings.password}
                 onChange={handleWebDAVSettingsChange('password')}
                 placeholder="应用密码(非登录密码)"
-                helperText="在坚果云账户信息-安全选项中获取应用密码"
+                helperText="在WebDAV服务提供商处获取应用密码"
                 sx={{ mb: 1 }}
               />
               <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 1 }}>
