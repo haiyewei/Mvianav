@@ -137,6 +137,7 @@ function App() {
   const [darkMode, setDarkMode] = useState(getSavedDarkMode);
   const [useBingWallpaper, setUseBingWallpaper] = useState(getSavedBingWallpaper);
   const [wallpaperOpacity, setWallpaperOpacity] = useState(getSavedBingWallpaper() ? 1 : 0);
+  const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [wallpaperUrl, setWallpaperUrl] = useState(() => {
     // 初始化时从localStorage加载壁纸URL
     const { url } = getSavedWallpaperData();
@@ -208,8 +209,8 @@ function App() {
   const [selectedSearchEngine, setSelectedSearchEngine] = useState(() => getSavedSearchEngine(searchEngines));
   // 添加颜色状态
   const [logoColorIndices, setLogoColorIndices] = useState([0, 1, 2, 3, 4, 5, 6]);
-  // 新增：存储Logo首字母M的当前颜色
-  const mColor = rainbowColors[logoColorIndices[0]];
+  // 存储Logo第四个字母a的当前颜色
+  const aColor = rainbowColors[logoColorIndices[3]];
   // 添加颜色变化方向状态
   const [colorChangeDirection, setColorChangeDirection] = useState(() => {
     try {
@@ -255,6 +256,7 @@ function App() {
     // 设置长按定时器
     longPressTimerRef.current = setTimeout(() => {
       setIsLongPress(true);
+      
       // 切换颜色变化方向
       const newDirection = colorChangeDirection === 'backward' ? 'forward' : 'backward';
       setColorChangeDirection(newDirection);
@@ -272,7 +274,7 @@ function App() {
       try {
         localStorage.setItem('colorChangeDirection', JSON.stringify(newDirection));
       } catch (error) {
-        console.error('保存颜色变化方向设置失败:', error);
+        console.error('保存设置失败:', error);
       }
     }, 800); // 长按时间阈值800毫秒
   };
@@ -572,6 +574,16 @@ function App() {
   
   const handleCloseTestResult = () => {
     setTestResult({ ...testResult, show: false });
+  };
+
+  const handleSearchFocus = () => {
+    setIsSearchFocused(true);
+  };
+  
+  const handleSearchBlur = () => {
+    if (!searchTerm) {
+      setIsSearchFocused(false);
+    }
   };
 
   return (
@@ -960,51 +972,65 @@ function App() {
             zIndex: 2,
             px: { xs: 3, sm: 2, md: 0 }, // 移动端添加左右内边距
           }}>
-            <Paper 
-              ref={searchRef} 
-              elevation={3}
-              sx={{ 
-                borderRadius: 28,
-                backgroundColor: actualDarkMode ? 'rgba(30, 30, 30, 0.8)' : 'rgba(255, 255, 255, 0.8)',
-                // 根据是否开启每日一图来决定是否显示荧光效果，未聚焦时荧光更强，深色模式下进一步增强
-                boxShadow: useBingWallpaper 
-                  ? 'none' 
-                  : actualDarkMode 
-                    ? `0 0 18px 6px ${mColor}80, 0 0 30px 10px ${mColor}50` // 深色模式下荧光更强
-                    : `0 0 15px 5px ${mColor}70, 0 0 25px 8px ${mColor}40`, // 浅色模式下荧光适中
-                position: 'relative',
-                transition: 'all 0.3s ease-in-out',
-                width: { xs: '100%', sm: '90%', md: '100%' }, // 在sm尺寸下减小宽度
-                mx: 'auto', // 水平居中
-                '&:hover': {
-                  // 悬停时荧光效果适中
-                  boxShadow: useBingWallpaper 
-                    ? 'none' 
-                    : actualDarkMode
-                      ? `0 0 14px 4px ${mColor}70, 0 0 22px 7px ${mColor}40` // 深色模式下
-                      : `0 0 12px 4px ${mColor}60, 0 0 20px 6px ${mColor}30` // 浅色模式下
-                },
-                '&:focus-within': {
-                  // 聚焦时荧光效果最弱
-                  boxShadow: useBingWallpaper 
-                    ? 'none' 
-                    : actualDarkMode
-                      ? `0 0 10px 3px ${mColor}60, 0 0 18px 5px ${mColor}30` // 深色模式下
-                      : `0 0 8px 2px ${mColor}50, 0 0 15px 4px ${mColor}20`  // 浅色模式下
-                }
-              }}
-            >
-              <TextField
-                fullWidth
-                variant="outlined"
-                placeholder="搜索..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                onKeyPress={(e) => e.key === 'Enter' && handleSearch(e)}
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <IconButton onClick={handleSearchEngineMenuOpen} aria-label="选择搜索引擎" size="small">
+            {/* 搜索栏和两侧按钮的容器 */}
+            <Box sx={{ 
+              display: 'flex', 
+              alignItems: 'center',
+              justifyContent: 'center', // 改为居中对齐，方便动态分配空间
+              width: '100%',
+              position: 'relative', // 使用相对定位，便于子元素精确布局
+              gap: { xs: 0.75, sm: 1.5 }, // 设置固定的间距，不随搜索框状态变化
+              px: { xs: 1, sm: 2 } // 添加内边距防止按钮溢出
+            }}>
+              {/* 左侧三个按钮 */}
+              <Box sx={{ 
+                display: 'flex', 
+                gap: { xs: 0.75, sm: 1.5 }, // 与整体容器保持一致的间距
+                transition: 'all 0.2s ease-in-out',
+                position: 'relative'
+              }}>
+                {[0, 1, 2].map((index) => (
+                  <Paper
+                    key={`left-button-${index}`}
+                    elevation={3}
+                    sx={{
+                      borderRadius: 28,
+                      backgroundColor: actualDarkMode ? 'rgba(30, 30, 30, 0.8)' : 'rgba(255, 255, 255, 0.8)',
+                      // 对应Logo中位置0,1,2的字母颜色
+                      boxShadow: useBingWallpaper 
+                        ? 'none' 
+                        : actualDarkMode 
+                          ? `0 0 18px 6px ${rainbowColors[logoColorIndices[index]]}80, 0 0 30px 10px ${rainbowColors[logoColorIndices[index]]}50`
+                          : `0 0 15px 5px ${rainbowColors[logoColorIndices[index]]}70, 0 0 25px 8px ${rainbowColors[logoColorIndices[index]]}40`,
+                      transition: 'all 0.2s ease-in-out',
+                      display: 'flex',
+                      justifyContent: 'center',
+                      alignItems: 'center',
+                      width: { xs: 40, sm: 50 },
+                      height: { xs: 40, sm: 50 },
+                      // 只对位置0和1进行隐藏，位置2(搜索引擎按钮)始终显示
+                      // 直接使用opacity和display来控制显示/隐藏
+                      opacity: (isSearchFocused || searchTerm) && index !== 2 ? 0 : 1,
+                      visibility: (isSearchFocused || searchTerm) && index !== 2 ? 'hidden' : 'visible',
+                      position: 'relative',
+                      pointerEvents: (isSearchFocused || searchTerm) && index !== 2 ? 'none' : 'auto',
+                      '&:hover': {
+                        boxShadow: useBingWallpaper 
+                          ? 'none' 
+                          : actualDarkMode
+                            ? `0 0 14px 4px ${rainbowColors[logoColorIndices[index]]}70, 0 0 22px 7px ${rainbowColors[logoColorIndices[index]]}40`
+                            : `0 0 12px 4px ${rainbowColors[logoColorIndices[index]]}60, 0 0 20px 6px ${rainbowColors[logoColorIndices[index]]}30`
+                      }
+                    }}
+                  >
+                    {/* 位置2上放置搜索引擎选择功能，其他按钮暂时为空 */}
+                    {index === 2 ? (
+                      <IconButton 
+                        onClick={handleSearchEngineMenuOpen} 
+                        aria-label="选择搜索引擎" 
+                        size="small"
+                        sx={{ color: rainbowColors[logoColorIndices[index]] }}
+                      >
                         <Avatar 
                           src={selectedSearchEngine.logo} 
                           alt={selectedSearchEngine.name}
@@ -1017,78 +1043,218 @@ function App() {
                           {selectedSearchEngine.name.charAt(0)}
                         </Avatar>
                       </IconButton>
-                      <Menu
-                        anchorEl={searchEngineMenuAnchor}
-                        open={Boolean(searchEngineMenuAnchor)}
-                        onClose={handleSearchEngineMenuClose}
-                      >
-                        {searchEngines.map((engine) => (
-                          <MenuItem 
-                            key={engine.id}
-                            onClick={() => handleSearchEngineSelect(engine)}
-                            selected={selectedSearchEngine.id === engine.id}
-                          >
-                            <ListItemIcon>
-                              <Avatar 
-                                src={engine.logo} 
-                                alt={engine.name}
-                                sx={{ 
-                                  width: 24, 
-                                  height: 24,
-                                  bgcolor: engine.color
-                                }}
-                              >
-                                {engine.name.charAt(0)}
-                              </Avatar>
-                            </ListItemIcon>
-                            <ListItemText>{engine.name}</ListItemText>
-                          </MenuItem>
-                        ))}
-                      </Menu>
-                    </InputAdornment>
+                    ) : (
+                      <IconButton sx={{ color: rainbowColors[logoColorIndices[index]] }}>
+                        {/* 空按钮 */}
+                      </IconButton>
+                    )}
+                    <Menu
+                      anchorEl={searchEngineMenuAnchor}
+                      open={Boolean(searchEngineMenuAnchor)}
+                      onClose={handleSearchEngineMenuClose}
+                    >
+                      {searchEngines.map((engine) => (
+                        <MenuItem 
+                          key={engine.id}
+                          onClick={() => handleSearchEngineSelect(engine)}
+                          selected={selectedSearchEngine.id === engine.id}
+                        >
+                          <ListItemIcon>
+                            <Avatar 
+                              src={engine.logo} 
+                              alt={engine.name}
+                              sx={{ 
+                                width: 24, 
+                                height: 24,
+                                bgcolor: engine.color
+                              }}
+                            >
+                              {engine.name.charAt(0)}
+                            </Avatar>
+                          </ListItemIcon>
+                          <ListItemText>{engine.name}</ListItemText>
+                        </MenuItem>
+                      ))}
+                    </Menu>
+                  </Paper>
+                ))}
+              </Box>
+
+              {/* 中间搜索框 - 动态大小 */}
+              <Paper 
+                ref={searchRef} 
+                elevation={3}
+                onClick={() => {
+                  if (!isSearchFocused && !searchTerm) {
+                    // 先设置焦点状态，然后再聚焦输入框
+                    setIsSearchFocused(true);
+                    // 使用setTimeout确保状态更新后再聚焦
+                    setTimeout(() => {
+                      const inputElement = searchRef.current?.querySelector('input');
+                      if (inputElement) {
+                        inputElement.focus();
+                      }
+                    }, 10);
+                  }
+                }}
+                sx={{ 
+                  borderRadius: 28,
+                  backgroundColor: actualDarkMode ? 'rgba(30, 30, 30, 0.8)' : 'rgba(255, 255, 255, 0.8)',
+                  // 根据是否开启每日一图来决定是否显示荧光效果，未聚焦时荧光更强，深色模式下进一步增强
+                  boxShadow: useBingWallpaper 
+                    ? 'none' 
+                    : actualDarkMode 
+                      ? `0 0 18px 6px ${aColor}80, 0 0 30px 10px ${aColor}50` // 深色模式下荧光更强
+                      : `0 0 15px 5px ${aColor}70, 0 0 25px 8px ${aColor}40`, // 浅色模式下荧光适中
+                  position: 'relative',
+                  transition: 'all 0.3s ease-in-out, width 0.25s ease-out',
+                  zIndex: 3, // 确保搜索框在最上层
+                  // 移动端特别处理
+                  ...(isSearchFocused || searchTerm 
+                    ? {
+                        flexGrow: { xs: 0, sm: 1, md: 1 }, // 移动端不使用flexGrow
+                        width: { xs: '180px', sm: 'auto', md: 'auto' }, // 移动端使用固定宽度
+                        minWidth: { xs: '180px', sm: '250px', md: '450px' }, // 确保移动端有最小宽度，桌面端至少与logo一样宽
+                        maxWidth: { xs: '240px', sm: '450px', md: '750px' } // 增加桌面端的宽度，大于logo宽度
+                      } 
+                    : {
+                        flexGrow: 0,
+                        width: { xs: 40, sm: 50 },
+                        minWidth: { xs: 40, sm: 50 },
+                        maxWidth: 'none'
+                      }
                   ),
-                  endAdornment: (
-                    <InputAdornment position="end">
-                      <IconButton onClick={handleSearchIconClick} size="small">
+                  height: { xs: 40, sm: 50 },
+                  overflow: 'hidden',
+                  cursor: isSearchFocused || searchTerm ? 'text' : 'pointer', // 根据状态调整鼠标指针样式
+                  '&:hover': {
+                    // 悬停时荧光效果适中
+                    boxShadow: useBingWallpaper 
+                      ? 'none' 
+                      : actualDarkMode
+                        ? `0 0 14px 4px ${aColor}70, 0 0 22px 7px ${aColor}40` // 深色模式下
+                        : `0 0 12px 4px ${aColor}60, 0 0 20px 6px ${aColor}30` // 浅色模式下
+                  },
+                  '&:focus-within': {
+                    // 聚焦时荧光效果最弱
+                    boxShadow: useBingWallpaper 
+                      ? 'none' 
+                      : actualDarkMode
+                        ? `0 0 10px 3px ${aColor}60, 0 0 18px 5px ${aColor}30` // 深色模式下
+                        : `0 0 8px 2px ${aColor}50, 0 0 15px 4px ${aColor}20`  // 浅色模式下
+                  }
+                }}
+              >
+                <TextField
+                  fullWidth
+                  variant="outlined"
+                  placeholder={isSearchFocused || searchTerm ? `${selectedSearchEngine.name}一下你就知道，${selectedSearchEngine.name}知道的太多了...` : ""}
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  onKeyPress={(e) => e.key === 'Enter' && handleSearch(e)}
+                  onFocus={handleSearchFocus}
+                  onBlur={(e) => {
+                    // 只在没有文字时，失焦后切换回按钮模式
+                    if (!searchTerm) {
+                      handleSearchBlur();
+                    }
+                  }}
+                  InputProps={{
+                    sx: { 
+                      borderRadius: 28,
+                      py: 0.5,
+                      px: isSearchFocused || searchTerm ? 2 : 0,
+                      height: { xs: 40, sm: 50 },
+                      // 聚焦或有输入时显示输入框
+                      opacity: isSearchFocused || searchTerm ? 1 : 0,
+                      visibility: isSearchFocused || searchTerm ? 'visible' : 'hidden',
+                      // 确保输入框边框在任何状态下都是透明的
+                      '& .MuiOutlinedInput-notchedOutline': {
+                        borderColor: 'transparent',
+                        transition: 'border-color 0.3s ease-in-out'
+                      },
+                      '&:hover .MuiOutlinedInput-notchedOutline': {
+                        borderColor: 'transparent'
+                      },
+                      '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                        borderColor: 'transparent',
+                        borderWidth: '1px'
+                      },
+                      color: actualDarkMode ? 'white' : 'black',
+                      '& input::placeholder': {
+                        color: actualDarkMode ? 'rgba(255, 255, 255, 0.5)' : 'rgba(0, 0, 0, 0.4)',
+                        opacity: 1
+                      },
+                      '& .MuiSvgIcon-root': {
+                        color: actualDarkMode ? 'white' : 'rgba(0, 0, 0, 0.54)',
+                      },
+                      // 确保在焦点状态下没有额外的边框或阴影
+                      '&.Mui-focused': {
+                        outline: 'none'
+                      }
+                    }
+                  }}
+                />
+              </Paper>
+
+              {/* 右侧三个按钮 */}
+              <Box sx={{ 
+                display: 'flex', 
+                gap: { xs: 0.75, sm: 1.5 }, // 与整体容器保持一致的间距
+                transition: 'all 0.2s ease-in-out',
+                position: 'relative'
+              }}>
+                {[4, 5, 6].map((index) => (
+                  <Paper
+                    key={`right-button-${index}`}
+                    elevation={3}
+                    sx={{
+                      borderRadius: 28,
+                      backgroundColor: actualDarkMode ? 'rgba(30, 30, 30, 0.8)' : 'rgba(255, 255, 255, 0.8)',
+                      // 对应Logo中位置4,5,6的字母颜色
+                      boxShadow: useBingWallpaper 
+                        ? 'none' 
+                        : actualDarkMode 
+                          ? `0 0 18px 6px ${rainbowColors[logoColorIndices[index]]}80, 0 0 30px 10px ${rainbowColors[logoColorIndices[index]]}50`
+                          : `0 0 15px 5px ${rainbowColors[logoColorIndices[index]]}70, 0 0 25px 8px ${rainbowColors[logoColorIndices[index]]}40`,
+                      transition: 'all 0.2s ease-in-out',
+                      display: 'flex',
+                      justifyContent: 'center',
+                      alignItems: 'center',
+                      width: { xs: 40, sm: 50 },
+                      height: { xs: 40, sm: 50 },
+                      // 只对位置5和6进行隐藏，位置4(搜索按钮)始终显示
+                      // 直接使用opacity和display来控制显示/隐藏
+                      opacity: (isSearchFocused || searchTerm) && index !== 4 ? 0 : 1,
+                      visibility: (isSearchFocused || searchTerm) && index !== 4 ? 'hidden' : 'visible',
+                      position: 'relative',
+                      pointerEvents: (isSearchFocused || searchTerm) && index !== 4 ? 'none' : 'auto',
+                      '&:hover': {
+                        boxShadow: useBingWallpaper 
+                          ? 'none' 
+                          : actualDarkMode
+                            ? `0 0 14px 4px ${rainbowColors[logoColorIndices[index]]}70, 0 0 22px 7px ${rainbowColors[logoColorIndices[index]]}40`
+                            : `0 0 12px 4px ${rainbowColors[logoColorIndices[index]]}60, 0 0 20px 6px ${rainbowColors[logoColorIndices[index]]}30`
+                      }
+                    }}
+                  >
+                    {/* 位置4上放置搜索按钮，其他按钮暂时为空 */}
+                    {index === 4 ? (
+                      <IconButton onClick={handleSearchIconClick} size="small" sx={{ color: rainbowColors[logoColorIndices[index]] }}>
                         <SearchIcon sx={{ 
                           color: actualDarkMode ? 'white' : 'rgba(0, 0, 0, 0.54)',
                           fontSize: '1.2rem'
                         }} />
                       </IconButton>
-                    </InputAdornment>
-                  ),
-                  sx: { 
-                    borderRadius: 28,
-                    py: 0.5,
-                    pr: 0.5,
-                    // 确保输入框边框在任何状态下都是透明的
-                    '& .MuiOutlinedInput-notchedOutline': {
-                      borderColor: 'transparent',
-                      transition: 'border-color 0.3s ease-in-out'
-                    },
-                    '&:hover .MuiOutlinedInput-notchedOutline': {
-                      borderColor: 'transparent'
-                    },
-                    '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                      borderColor: 'transparent',
-                      borderWidth: '1px'
-                    },
-                    color: actualDarkMode ? 'white' : 'black',
-                    '& input::placeholder': {
-                      color: actualDarkMode ? 'rgba(255, 255, 255, 0.5)' : 'rgba(0, 0, 0, 0.4)',
-                      opacity: 1
-                    },
-                    '& .MuiSvgIcon-root': {
-                      color: actualDarkMode ? 'white' : 'rgba(0, 0, 0, 0.54)',
-                    },
-                    // 确保在焦点状态下没有额外的边框或阴影
-                    '&.Mui-focused': {
-                      outline: 'none'
-                    }
-                  }
-                }}
-              />
-            </Paper>
+                    ) : (
+                      <IconButton sx={{ color: rainbowColors[logoColorIndices[index]] }}>
+                        {/* 空按钮 */}
+                      </IconButton>
+                    )}
+                  </Paper>
+                ))}
+              </Box>
+            </Box>
           </Box>
         </Box>
       </Container>
