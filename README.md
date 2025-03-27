@@ -64,3 +64,17 @@
 3. 提交更改 (`git commit -m 'Add some amazing feature'`)
 4. 推送到分支 (`git push origin feature/amazing-feature`)
 5. 开启Pull Request
+
+## 许可证
+
+本项目采用 MIT 许可证 - 查看 [LICENSE](LICENSE) 文件了解详情。
+
+MIT 许可证是一个宽松的许可证，仅要求在软件和相关文档中包含许可证和版权声明。该许可证允许任何人自由地使用、修改、合并、发布、分发、再许可和/或销售本软件的副本。
+
+```
+MIT License
+
+Copyright (c) 2023-2024 Mvianav
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files...

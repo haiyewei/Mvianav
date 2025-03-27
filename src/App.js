@@ -1,3 +1,14 @@
+/*
+ * Mvianav - 现代化的导航起始页
+ * https://github.com/haiyewei/Mvianav
+ * 
+ * MIT License
+ * Copyright (c) 2023-2024 Mvianav
+ * 
+ * 这是一个基于React开发的现代化导航起始页，提供了美观实用的搜索界面、
+ * 个性化设置和云同步功能。
+ */
+
 import './App.css';
 /* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable no-unused-vars */
