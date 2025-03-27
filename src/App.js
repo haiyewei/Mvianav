@@ -183,7 +183,29 @@ function App() {
     }
   ];
   
+  // 彩虹颜色定义
+  const rainbowColors = [
+    '#FF0000', // 红
+    '#FF7F00', // 橙
+    '#FFFF00', // 黄
+    '#00FF00', // 绿
+    '#00FFFF', // 青
+    '#0000FF', // 蓝
+    '#8B00FF'  // 紫
+  ];
+  
   const [selectedSearchEngine, setSelectedSearchEngine] = useState(() => getSavedSearchEngine(searchEngines));
+  // 添加颜色状态
+  const [logoColorIndices, setLogoColorIndices] = useState([0, 1, 2, 3, 4, 5, 6]);
+  
+  // 处理Logo点击的函数
+  const handleLogoClick = () => {
+    // 循环向后移动颜色：每个颜色索引-1，如果小于0则回到6
+    setLogoColorIndices(prevIndices => {
+      const newIndices = prevIndices.map(index => (index - 1 + 7) % 7);
+      return newIndices;
+    });
+  };
   
   // 保存设置到localStorage
   useEffect(() => {
@@ -699,32 +721,58 @@ function App() {
           width: '100%'
         }}>
           {/* Mvianav 文字Logo */}
-          <Box sx={{ 
-            display: 'flex', 
-            justifyContent: 'center',
-            fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif',
-            fontWeight: 500,
-            fontSize: { xs: '5rem', sm: '6rem', md: '7rem' },
-            letterSpacing: '-2px',
-            textShadow: '1px 1px 2px rgba(0,0,0,0.1)',
-            width: 'auto',
-            maxWidth: '100%',
-            height: 'auto',
-            minHeight: { xs: '80px', sm: '90px', md: '100px' },
-            alignItems: 'center',
-            overflow: 'visible',
-            transform: 'translateY(-90%)',
-            marginBottom: { xs: '-70px', sm: '-75px', md: '-80px' },
-            position: 'relative',
-            zIndex: 1
-          }}>
-            <Typography component="span" sx={{ color: '#4285F4', lineHeight: 0.8, fontSize: 'inherit' }}>M</Typography>
-            <Typography component="span" sx={{ color: '#EA4335', lineHeight: 0.8, fontSize: 'inherit' }}>v</Typography>
-            <Typography component="span" sx={{ color: '#FBBC05', lineHeight: 0.8, fontSize: 'inherit' }}>i</Typography>
-            <Typography component="span" sx={{ color: '#4285F4', lineHeight: 0.8, fontSize: 'inherit' }}>a</Typography>
-            <Typography component="span" sx={{ color: '#34A853', lineHeight: 0.8, fontSize: 'inherit' }}>n</Typography>
-            <Typography component="span" sx={{ color: '#EA4335', lineHeight: 0.8, fontSize: 'inherit' }}>a</Typography>
-            <Typography component="span" sx={{ color: '#4285F4', lineHeight: 0.8, fontSize: 'inherit' }}>v</Typography>
+          <Box 
+            sx={{ 
+              display: 'flex', 
+              justifyContent: 'center',
+              fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif',
+              fontWeight: 500,
+              fontSize: { xs: '5rem', sm: '6rem', md: '7rem' },
+              letterSpacing: '-2px',
+              textShadow: '1px 1px 2px rgba(0,0,0,0.1)',
+              width: 'auto',
+              maxWidth: '100%',
+              height: 'auto',
+              minHeight: { xs: '80px', sm: '90px', md: '100px' },
+              alignItems: 'center',
+              overflow: 'visible',
+              transform: 'translateY(-90%)',
+              marginBottom: { xs: '-70px', sm: '-75px', md: '-80px' },
+              position: 'relative',
+              zIndex: 1,
+              cursor: 'pointer', // 添加指针样式表明可点击
+              transition: 'transform 0.2s', // 添加过渡效果
+              '&:hover': {
+                transform: 'translateY(-90%) scale(1.05)', // 悬停时略微放大
+              },
+              '&:active': {
+                transform: 'translateY(-90%) scale(0.95)', // 点击时略微缩小
+              },
+              userSelect: 'none', // 防止文本被选中
+              WebkitUserSelect: 'none',
+              MozUserSelect: 'none',
+              msUserSelect: 'none'
+            }}
+            onClick={handleLogoClick} // 添加点击事件处理
+          >
+            {/* 透明蒙版，接收所有点击事件 */}
+            <Box 
+              sx={{ 
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                zIndex: 10,
+              }}
+            />
+            <Typography component="span" sx={{ color: rainbowColors[logoColorIndices[0]], lineHeight: 0.8, fontSize: 'inherit', transition: 'color 0.3s' }}>M</Typography>
+            <Typography component="span" sx={{ color: rainbowColors[logoColorIndices[1]], lineHeight: 0.8, fontSize: 'inherit', transition: 'color 0.3s' }}>v</Typography>
+            <Typography component="span" sx={{ color: rainbowColors[logoColorIndices[2]], lineHeight: 0.8, fontSize: 'inherit', transition: 'color 0.3s' }}>i</Typography>
+            <Typography component="span" sx={{ color: rainbowColors[logoColorIndices[3]], lineHeight: 0.8, fontSize: 'inherit', transition: 'color 0.3s' }}>a</Typography>
+            <Typography component="span" sx={{ color: rainbowColors[logoColorIndices[4]], lineHeight: 0.8, fontSize: 'inherit', transition: 'color 0.3s' }}>n</Typography>
+            <Typography component="span" sx={{ color: rainbowColors[logoColorIndices[5]], lineHeight: 0.8, fontSize: 'inherit', transition: 'color 0.3s' }}>a</Typography>
+            <Typography component="span" sx={{ color: rainbowColors[logoColorIndices[6]], lineHeight: 0.8, fontSize: 'inherit', transition: 'color 0.3s' }}>v</Typography>
           </Box>
           
           {/* 搜索框表单 */}
