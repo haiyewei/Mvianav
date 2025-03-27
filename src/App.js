@@ -197,6 +197,8 @@ function App() {
   const [selectedSearchEngine, setSelectedSearchEngine] = useState(() => getSavedSearchEngine(searchEngines));
   // 添加颜色状态
   const [logoColorIndices, setLogoColorIndices] = useState([0, 1, 2, 3, 4, 5, 6]);
+  // 新增：存储Logo首字母M的当前颜色
+  const mColor = rainbowColors[logoColorIndices[0]];
   // 添加颜色变化方向状态
   const [colorChangeDirection, setColorChangeDirection] = useState(() => {
     try {
@@ -831,7 +833,7 @@ function App() {
           {/* Mvianav 文字Logo - 移动端单独定位 */}
           <Box
             sx={{
-              position: { xs: 'static', sm: 'relative', md: 'relative' }, // 移动端不使用固定定位
+              position: { xs: 'static', sm: 'relative', md: 'relative' }, // 移动端使用static，平板和桌面端使用relative定位，以便放置动画
               top: { xs: 'auto', sm: 'auto', md: 'auto' }, // 移动端不使用固定top值
               left: { xs: 'auto', sm: 'auto', md: 'auto' },
               transform: { 
@@ -877,7 +879,6 @@ function App() {
               msUserSelect: 'none',
               WebkitTapHighlightColor: 'transparent', // 移除移动设备点击高亮
               outline: 'none', // 移除点击轮廓
-              position: 'relative', // 需要相对定位以便放置动画
             }}
             onMouseDown={handleLogoMouseDown}
             onMouseUp={handleLogoMouseUp}
@@ -954,35 +955,20 @@ function App() {
               sx={{ 
                 borderRadius: 28,
                 backgroundColor: actualDarkMode ? 'rgba(30, 30, 30, 0.8)' : 'rgba(255, 255, 255, 0.8)',
-                boxShadow: useBingWallpaper ? '0 4px 20px rgba(0, 0, 0, 0.2)' : undefined,
+                // 简化荧光效果，直接使用M字母颜色
+                boxShadow: `0 0 10px 2px ${mColor}50`,
                 position: 'relative',
-                transition: 'box-shadow 0.3s ease-in-out',
+                transition: 'all 0.3s ease-in-out',
                 width: { xs: '100%', sm: '90%', md: '100%' }, // 在sm尺寸下减小宽度
                 mx: 'auto', // 水平居中
                 '&:hover': {
-                  boxShadow: actualDarkMode 
-                    ? '0 0 15px 5px rgba(100, 181, 246, 0.6), 0 0 30px 10px rgba(100, 181, 246, 0.2)' 
-                    : '0 0 15px 5px rgba(33, 150, 243, 0.4), 0 0 30px 10px rgba(33, 150, 243, 0.1)'
+                  // 悬停时增强荧光效果
+                  boxShadow: `0 0 15px 5px ${mColor}80, 0 0 30px 10px ${mColor}40`
                 },
-                // 荧光脉冲动画效果
-                '@keyframes pulse': {
-                  '0%': {
-                    boxShadow: actualDarkMode 
-                      ? '0 0 10px 2px rgba(100, 181, 246, 0.3)' 
-                      : '0 0 10px 2px rgba(33, 150, 243, 0.2)'
-                  },
-                  '50%': {
-                    boxShadow: actualDarkMode 
-                      ? '0 0 15px 5px rgba(100, 181, 246, 0.6)' 
-                      : '0 0 15px 5px rgba(33, 150, 243, 0.4)'
-                  },
-                  '100%': {
-                    boxShadow: actualDarkMode 
-                      ? '0 0 10px 2px rgba(100, 181, 246, 0.3)' 
-                      : '0 0 10px 2px rgba(33, 150, 243, 0.2)'
-                  }
-                },
-                animation: 'pulse 3s infinite'
+                '&:focus-within': {
+                  // 获得焦点时增强荧光效果
+                  boxShadow: `0 0 15px 5px ${mColor}80, 0 0 30px 10px ${mColor}40`
+                }
               }}
             >
               <TextField
@@ -1052,14 +1038,17 @@ function App() {
                     borderRadius: 28,
                     py: 0.5,
                     pr: 0.5,
+                    // 确保输入框边框在任何状态下都是透明的
                     '& .MuiOutlinedInput-notchedOutline': {
                       borderColor: 'transparent',
+                      transition: 'border-color 0.3s ease-in-out'
                     },
                     '&:hover .MuiOutlinedInput-notchedOutline': {
-                      borderColor: 'transparent',
+                      borderColor: 'transparent'
                     },
                     '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
                       borderColor: 'transparent',
+                      borderWidth: '1px'
                     },
                     color: actualDarkMode ? 'white' : 'black',
                     '& input::placeholder': {
@@ -1068,6 +1057,10 @@ function App() {
                     },
                     '& .MuiSvgIcon-root': {
                       color: actualDarkMode ? 'white' : 'rgba(0, 0, 0, 0.54)',
+                    },
+                    // 确保在焦点状态下没有额外的边框或阴影
+                    '&.Mui-focused': {
+                      outline: 'none'
                     }
                   }
                 }}
