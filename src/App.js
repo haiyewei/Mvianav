@@ -634,208 +634,6 @@ function App() {
         }}
       />
       
-      {/* 仅保留右上角设置按钮 */}
-      <Box sx={{ position: 'absolute', top: 20, right: 20, zIndex: 100 }}>
-        <IconButton 
-          onClick={handleSettingsMenuOpen} 
-          sx={{ 
-            backgroundColor: 'rgba(255, 255, 255, 0.2)', 
-            '&:hover': { backgroundColor: 'rgba(255, 255, 255, 0.3)' } 
-          }}
-        >
-          <SettingsIcon sx={{ color: useBingWallpaper ? 'white' : undefined }} />
-        </IconButton>
-        <Menu
-          anchorEl={settingsMenuAnchor}
-          open={Boolean(settingsMenuAnchor)}
-          onClose={handleSettingsMenuClose}
-          PaperProps={{
-            elevation: 3,
-            sx: { 
-              minWidth: 250,
-              maxWidth: 350,
-              borderRadius: 2,
-              p: 1
-            }
-          }}
-        >
-          <MenuItem>
-            <Typography variant="subtitle1" sx={{ fontWeight: 'bold', mb: 1 }}>
-              深色模式
-            </Typography>
-          </MenuItem>
-          <MenuItem dense onClick={() => handleDarkModeChange('system')} selected={darkMode === 'system'}>
-            <ListItemIcon>
-              <BrightnessAutoIcon />
-            </ListItemIcon>
-            <ListItemText>跟随系统</ListItemText>
-          </MenuItem>
-          <MenuItem dense onClick={() => handleDarkModeChange('light')} selected={darkMode === 'light'}>
-            <ListItemIcon>
-              <LightModeIcon />
-            </ListItemIcon>
-            <ListItemText>浅色模式</ListItemText>
-          </MenuItem>
-          <MenuItem dense onClick={() => handleDarkModeChange('dark')} selected={darkMode === 'dark'}>
-            <ListItemIcon>
-              <DarkModeIcon />
-            </ListItemIcon>
-            <ListItemText>深色模式</ListItemText>
-          </MenuItem>
-          <Divider sx={{ my: 1 }} />
-          <MenuItem>
-            <FormControlLabel
-              control={
-                <Switch 
-                  checked={useBingWallpaper}
-                  onChange={handleBingWallpaperToggle}
-                  color="primary"
-                />
-              }
-              label={
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                  <WallpaperIcon fontSize="small" />
-                  <Typography>必应每日一图</Typography>
-                </Box>
-              }
-            />
-          </MenuItem>
-          
-          {/* WebDAV设置 */}
-          <Divider sx={{ my: 1 }} />
-          <MenuItem onClick={() => setShowWebDAVSettings(!showWebDAVSettings)}>
-            <ListItemIcon>
-              <CloudIcon />
-            </ListItemIcon>
-            <ListItemText primary="WebDAV" secondary="同步您的设置" />
-            {showWebDAVSettings ? <ExpandLessIcon /> : <ExpandMoreIcon />}
-          </MenuItem>
-          
-          <Collapse in={showWebDAVSettings} timeout="auto" unmountOnExit>
-            <Box sx={{ px: 2, py: 1 }}>
-              <TextField
-                label="服务器地址"
-                variant="outlined"
-                size="small"
-                fullWidth
-                margin="dense"
-                value={webDAVSettings.server}
-                onChange={handleWebDAVSettingsChange('server')}
-                placeholder="https://dav.jianguoyun.com"
-                sx={{ mb: 1 }}
-              />
-              <TextField
-                label="路径"
-                variant="outlined"
-                size="small"
-                fullWidth
-                margin="dense"
-                value={webDAVSettings.path}
-                onChange={handleWebDAVSettingsChange('path')}
-                placeholder="/dav/Via"
-                sx={{ mb: 1 }}
-              />
-              <TextField
-                label="WebDAV账号"
-                variant="outlined"
-                size="small"
-                fullWidth
-                margin="dense"
-                value={webDAVSettings.username}
-                onChange={handleWebDAVSettingsChange('username')}
-                placeholder="邮箱地址"
-                sx={{ mb: 1 }}
-              />
-              <TextField
-                label="应用密码"
-                type="password"
-                variant="outlined"
-                size="small"
-                fullWidth
-                margin="dense"
-                value={webDAVSettings.password}
-                onChange={handleWebDAVSettingsChange('password')}
-                placeholder="应用密码(非登录密码)"
-                helperText="在WebDAV服务提供商处获取应用密码"
-                sx={{ mb: 1 }}
-              />
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 1 }}>
-                <Button 
-                  variant="outlined" 
-                  size="small"
-                  onClick={testWebDAVConnection}
-                >
-                  测试连通
-                </Button>
-                <Button 
-                  variant="contained" 
-                  size="small"
-                  onClick={saveWebDAVSettings}
-                  color="primary"
-                >
-                  保存连接
-                </Button>
-              </Box>
-            </Box>
-          </Collapse>
-          
-          {/* 同步数据菜单 */}
-          <Divider sx={{ my: 1 }} />
-          <MenuItem onClick={() => setShowSyncOptions(!showSyncOptions)}>
-            <ListItemIcon>
-              <CloudIcon />
-            </ListItemIcon>
-            <ListItemText primary="同步数据" secondary="管理您的同步设置" />
-            {showSyncOptions ? <ExpandLessIcon /> : <ExpandMoreIcon />}
-          </MenuItem>
-          
-          <Collapse in={showSyncOptions} timeout="auto" unmountOnExit>
-            <Box sx={{ px: 2, py: 1, display: 'flex', flexDirection: 'column', gap: 1 }}>
-              <Button 
-                variant="outlined" 
-                size="small"
-                fullWidth
-                startIcon={<CloudIcon />}
-              >
-                从云端同步
-              </Button>
-              <Button 
-                variant="outlined" 
-                size="small"
-                fullWidth
-                startIcon={<CloudIcon />}
-              >
-                同步到云端
-              </Button>
-              <Button 
-                variant="outlined" 
-                size="small"
-                fullWidth
-                startIcon={<CloudIcon />}
-              >
-                导入浏览器
-              </Button>
-              <Button 
-                variant="outlined" 
-                size="small"
-                fullWidth
-                startIcon={<CloudIcon />}
-              >
-                导出浏览器
-              </Button>
-              <Button 
-                variant="outlined" 
-                size="small"
-                fullWidth
-                startIcon={<CloudIcon />}
-              >
-                从云端导出
-              </Button>
-            </Box>
-          </Collapse>
-        </Menu>
-      </Box>
-      
       {/* 主要搜索区域 */}
       <Container maxWidth="md" sx={{ 
         height: '100vh',
@@ -1246,6 +1044,17 @@ function App() {
                           fontSize: '1.2rem'
                         }} />
                       </IconButton>
+                    ) : index === 6 ? (
+                      <IconButton 
+                        onClick={handleSettingsMenuOpen} 
+                        size="small" 
+                        sx={{ color: rainbowColors[logoColorIndices[index]] }}
+                      >
+                        <SettingsIcon sx={{ 
+                          color: actualDarkMode ? 'white' : 'rgba(0, 0, 0, 0.54)',
+                          fontSize: '1.2rem'
+                        }} />
+                      </IconButton>
                     ) : (
                       <IconButton sx={{ color: rainbowColors[logoColorIndices[index]] }}>
                         {/* 空按钮 */}
@@ -1258,6 +1067,197 @@ function App() {
           </Box>
         </Box>
       </Container>
+      
+      {/* 设置菜单 */}
+      <Menu
+        anchorEl={settingsMenuAnchor}
+        open={Boolean(settingsMenuAnchor)}
+        onClose={handleSettingsMenuClose}
+        PaperProps={{
+          elevation: 3,
+          sx: { 
+            minWidth: 250,
+            maxWidth: 350,
+            borderRadius: 2,
+            p: 1
+          }
+        }}
+      >
+        <MenuItem>
+          <Typography variant="subtitle1" sx={{ fontWeight: 'bold', mb: 1 }}>
+            深色模式
+          </Typography>
+        </MenuItem>
+        <MenuItem dense onClick={() => handleDarkModeChange('system')} selected={darkMode === 'system'}>
+          <ListItemIcon>
+            <BrightnessAutoIcon />
+          </ListItemIcon>
+          <ListItemText>跟随系统</ListItemText>
+        </MenuItem>
+        <MenuItem dense onClick={() => handleDarkModeChange('light')} selected={darkMode === 'light'}>
+          <ListItemIcon>
+            <LightModeIcon />
+          </ListItemIcon>
+          <ListItemText>浅色模式</ListItemText>
+        </MenuItem>
+        <MenuItem dense onClick={() => handleDarkModeChange('dark')} selected={darkMode === 'dark'}>
+          <ListItemIcon>
+            <DarkModeIcon />
+          </ListItemIcon>
+          <ListItemText>深色模式</ListItemText>
+        </MenuItem>
+        <Divider sx={{ my: 1 }} />
+        <MenuItem>
+          <FormControlLabel
+            control={
+              <Switch 
+                checked={useBingWallpaper}
+                onChange={handleBingWallpaperToggle}
+                color="primary"
+              />
+            }
+            label={
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <WallpaperIcon fontSize="small" />
+                <Typography>必应每日一图</Typography>
+              </Box>
+            }
+          />
+        </MenuItem>
+        
+        {/* WebDAV设置 */}
+        <Divider sx={{ my: 1 }} />
+        <MenuItem onClick={() => setShowWebDAVSettings(!showWebDAVSettings)}>
+          <ListItemIcon>
+            <CloudIcon />
+          </ListItemIcon>
+          <ListItemText primary="WebDAV" secondary="同步您的设置" />
+          {showWebDAVSettings ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+        </MenuItem>
+        
+        <Collapse in={showWebDAVSettings} timeout="auto" unmountOnExit>
+          <Box sx={{ px: 2, py: 1 }}>
+            <TextField
+              label="服务器地址"
+              variant="outlined"
+              size="small"
+              fullWidth
+              margin="dense"
+              value={webDAVSettings.server}
+              onChange={handleWebDAVSettingsChange('server')}
+              placeholder="https://dav.jianguoyun.com"
+              sx={{ mb: 1 }}
+            />
+            <TextField
+              label="路径"
+              variant="outlined"
+              size="small"
+              fullWidth
+              margin="dense"
+              value={webDAVSettings.path}
+              onChange={handleWebDAVSettingsChange('path')}
+              placeholder="/dav/Via"
+              sx={{ mb: 1 }}
+            />
+            <TextField
+              label="WebDAV账号"
+              variant="outlined"
+              size="small"
+              fullWidth
+              margin="dense"
+              value={webDAVSettings.username}
+              onChange={handleWebDAVSettingsChange('username')}
+              placeholder="邮箱地址"
+              sx={{ mb: 1 }}
+            />
+            <TextField
+              label="应用密码"
+              type="password"
+              variant="outlined"
+              size="small"
+              fullWidth
+              margin="dense"
+              value={webDAVSettings.password}
+              onChange={handleWebDAVSettingsChange('password')}
+              placeholder="应用密码(非登录密码)"
+              helperText="在WebDAV服务提供商处获取应用密码"
+              sx={{ mb: 1 }}
+            />
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 1 }}>
+              <Button 
+                variant="outlined" 
+                size="small"
+                onClick={testWebDAVConnection}
+              >
+                测试连通
+              </Button>
+              <Button 
+                variant="contained" 
+                size="small"
+                onClick={saveWebDAVSettings}
+                color="primary"
+              >
+                保存连接
+              </Button>
+            </Box>
+          </Box>
+        </Collapse>
+        
+        {/* 同步数据菜单 */}
+        <Divider sx={{ my: 1 }} />
+        <MenuItem onClick={() => setShowSyncOptions(!showSyncOptions)}>
+          <ListItemIcon>
+            <CloudIcon />
+          </ListItemIcon>
+          <ListItemText primary="同步数据" secondary="管理您的同步设置" />
+          {showSyncOptions ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+        </MenuItem>
+        
+        <Collapse in={showSyncOptions} timeout="auto" unmountOnExit>
+          <Box sx={{ px: 2, py: 1, display: 'flex', flexDirection: 'column', gap: 1 }}>
+            <Button 
+              variant="outlined" 
+              size="small"
+              fullWidth
+              startIcon={<CloudIcon />}
+            >
+              从云端同步
+            </Button>
+            <Button 
+              variant="outlined" 
+              size="small"
+              fullWidth
+              startIcon={<CloudIcon />}
+            >
+              同步到云端
+            </Button>
+            <Button 
+              variant="outlined" 
+              size="small"
+              fullWidth
+              startIcon={<CloudIcon />}
+            >
+              导入浏览器
+            </Button>
+            <Button 
+              variant="outlined" 
+              size="small"
+              fullWidth
+              startIcon={<CloudIcon />}
+            >
+              导出浏览器
+            </Button>
+            <Button 
+              variant="outlined" 
+              size="small"
+              fullWidth
+              startIcon={<CloudIcon />}
+            >
+              从云端导出
+            </Button>
+          </Box>
+        </Collapse>
+      </Menu>
       
       {/* 消息提示 */}
       <Snackbar 
