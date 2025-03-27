@@ -966,19 +966,31 @@ function App() {
               sx={{ 
                 borderRadius: 28,
                 backgroundColor: actualDarkMode ? 'rgba(30, 30, 30, 0.8)' : 'rgba(255, 255, 255, 0.8)',
-                // 简化荧光效果，直接使用M字母颜色
-                boxShadow: `0 0 10px 2px ${mColor}50`,
+                // 根据是否开启每日一图来决定是否显示荧光效果，未聚焦时荧光更强，深色模式下进一步增强
+                boxShadow: useBingWallpaper 
+                  ? 'none' 
+                  : actualDarkMode 
+                    ? `0 0 18px 6px ${mColor}80, 0 0 30px 10px ${mColor}50` // 深色模式下荧光更强
+                    : `0 0 15px 5px ${mColor}70, 0 0 25px 8px ${mColor}40`, // 浅色模式下荧光适中
                 position: 'relative',
                 transition: 'all 0.3s ease-in-out',
                 width: { xs: '100%', sm: '90%', md: '100%' }, // 在sm尺寸下减小宽度
                 mx: 'auto', // 水平居中
                 '&:hover': {
-                  // 悬停时增强荧光效果
-                  boxShadow: `0 0 15px 5px ${mColor}80, 0 0 30px 10px ${mColor}40`
+                  // 悬停时荧光效果适中
+                  boxShadow: useBingWallpaper 
+                    ? 'none' 
+                    : actualDarkMode
+                      ? `0 0 14px 4px ${mColor}70, 0 0 22px 7px ${mColor}40` // 深色模式下
+                      : `0 0 12px 4px ${mColor}60, 0 0 20px 6px ${mColor}30` // 浅色模式下
                 },
                 '&:focus-within': {
-                  // 获得焦点时增强荧光效果
-                  boxShadow: `0 0 15px 5px ${mColor}80, 0 0 30px 10px ${mColor}40`
+                  // 聚焦时荧光效果最弱
+                  boxShadow: useBingWallpaper 
+                    ? 'none' 
+                    : actualDarkMode
+                      ? `0 0 10px 3px ${mColor}60, 0 0 18px 5px ${mColor}30` // 深色模式下
+                      : `0 0 8px 2px ${mColor}50, 0 0 15px 4px ${mColor}20`  // 浅色模式下
                 }
               }}
             >
