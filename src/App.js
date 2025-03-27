@@ -197,14 +197,95 @@ function App() {
   const [selectedSearchEngine, setSelectedSearchEngine] = useState(() => getSavedSearchEngine(searchEngines));
   // 添加颜色状态
   const [logoColorIndices, setLogoColorIndices] = useState([0, 1, 2, 3, 4, 5, 6]);
+  // 添加颜色变化方向状态
+  const [colorChangeDirection, setColorChangeDirection] = useState(() => {
+    try {
+      const savedDirection = localStorage.getItem('colorChangeDirection');
+      return savedDirection ? JSON.parse(savedDirection) : 'backward'; // 默认向后
+    } catch (error) {
+      console.error('获取颜色变化方向设置失败:', error);
+      return 'backward';
+    }
+  });
+  // 添加长按状态
+  const [isLongPress, setIsLongPress] = useState(false);
+  // 添加动画状态
+  const [showAnimation, setShowAnimation] = useState(false);
+  // 添加动画方向状态
+  const [animationDirection, setAnimationDirection] = useState('backward');
+  
+  // 长按定时器引用
+  const longPressTimerRef = useRef(null);
   
   // 处理Logo点击的函数
   const handleLogoClick = () => {
-    // 循环向后移动颜色：每个颜色索引-1，如果小于0则回到6
-    setLogoColorIndices(prevIndices => {
-      const newIndices = prevIndices.map(index => (index - 1 + 7) % 7);
-      return newIndices;
-    });
+    if (colorChangeDirection === 'backward') {
+      // 循环向后移动颜色：每个颜色索引-1，如果小于0则回到6
+      setLogoColorIndices(prevIndices => {
+        const newIndices = prevIndices.map(index => (index - 1 + 7) % 7);
+        return newIndices;
+      });
+    } else {
+      // 循环向前移动颜色：每个颜色索引+1，如果大于6则回到0
+      setLogoColorIndices(prevIndices => {
+        const newIndices = prevIndices.map(index => (index + 1) % 7);
+        return newIndices;
+      });
+    }
+  };
+  
+  // 处理Logo按下的函数
+  const handleLogoMouseDown = (e) => {
+    // 防止文本选择
+    e.preventDefault();
+    
+    // 设置长按定时器
+    longPressTimerRef.current = setTimeout(() => {
+      setIsLongPress(true);
+      // 切换颜色变化方向
+      const newDirection = colorChangeDirection === 'backward' ? 'forward' : 'backward';
+      setColorChangeDirection(newDirection);
+      
+      // 设置动画方向和显示动画
+      setAnimationDirection(newDirection);
+      setShowAnimation(true);
+      
+      // 动画完成后关闭
+      setTimeout(() => {
+        setShowAnimation(false);
+      }, 1000); // 动画持续1秒
+      
+      // 保存设置到localStorage
+      try {
+        localStorage.setItem('colorChangeDirection', JSON.stringify(newDirection));
+      } catch (error) {
+        console.error('保存颜色变化方向设置失败:', error);
+      }
+    }, 800); // 长按时间阈值800毫秒
+  };
+  
+  // 处理Logo释放的函数
+  const handleLogoMouseUp = () => {
+    if (longPressTimerRef.current) {
+      clearTimeout(longPressTimerRef.current);
+      longPressTimerRef.current = null;
+    }
+    
+    // 如果不是长按，则执行普通点击
+    if (!isLongPress) {
+      handleLogoClick();
+    }
+    
+    setIsLongPress(false);
+  };
+  
+  // 处理Logo离开的函数
+  const handleLogoMouseLeave = () => {
+    if (longPressTimerRef.current) {
+      clearTimeout(longPressTimerRef.current);
+      longPressTimerRef.current = null;
+    }
+    setIsLongPress(false);
   };
   
   // 保存设置到localStorage
@@ -502,6 +583,32 @@ function App() {
         }}
       />
       
+      {/* 定义全局关键帧动画 */}
+      <Box
+        sx={{
+          '@keyframes rainbow-sweep-left': {
+            '0%': {
+              clipPath: 'inset(0 100% 0 0)',
+              opacity: 0.9
+            },
+            '100%': {
+              clipPath: 'inset(0 0 0 0)',
+              opacity: 0
+            }
+          },
+          '@keyframes rainbow-sweep-right': {
+            '0%': {
+              clipPath: 'inset(0 0 0 100%)',
+              opacity: 0.9
+            },
+            '100%': {
+              clipPath: 'inset(0 0 0 0)',
+              opacity: 0
+            }
+          }
+        }}
+      />
+      
       {/* 仅保留右上角设置按钮 */}
       <Box sx={{ position: 'absolute', top: 20, right: 20, zIndex: 100 }}>
         <IconButton 
@@ -718,11 +825,20 @@ function App() {
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
-          width: '100%'
+          width: { xs: '90%', sm: '95%', md: '100%' }, // 移动端减小宽度，避免铺满屏幕
+          maxWidth: '100%'
         }}>
-          {/* Mvianav 文字Logo */}
-          <Box 
-            sx={{ 
+          {/* Mvianav 文字Logo - 移动端单独定位 */}
+          <Box
+            sx={{
+              position: { xs: 'static', sm: 'relative', md: 'relative' }, // 移动端不使用固定定位
+              top: { xs: 'auto', sm: 'auto', md: 'auto' }, // 移动端不使用固定top值
+              left: { xs: 'auto', sm: 'auto', md: 'auto' },
+              transform: { 
+                xs: 'none', 
+                sm: 'translateY(-90%)', 
+                md: 'translateY(-90%)' 
+              }, // 移动端不需要平移
               display: 'flex', 
               justifyContent: 'center',
               fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif',
@@ -730,30 +846,45 @@ function App() {
               fontSize: { xs: '5rem', sm: '6rem', md: '7rem' },
               letterSpacing: '-2px',
               textShadow: '1px 1px 2px rgba(0,0,0,0.1)',
-              width: 'auto',
-              maxWidth: '100%',
+              width: { xs: '75%', sm: '75%', md: '75%' }, // 保持与搜索框的宽度比例为1.5:2
+              maxWidth: 450, // 600(搜索框最大宽度) * 0.75 = 450
               height: 'auto',
               minHeight: { xs: '80px', sm: '90px', md: '100px' },
               alignItems: 'center',
               overflow: 'visible',
-              transform: 'translateY(-90%)',
-              marginBottom: { xs: '-70px', sm: '-75px', md: '-80px' },
-              position: 'relative',
+              marginBottom: { xs: '20px', sm: '-75px', md: '-80px' }, // 移动端添加正向边距
+              marginTop: { xs: 0, sm: 0, md: 0 },
               zIndex: 1,
               cursor: 'pointer', // 添加指针样式表明可点击
               transition: 'transform 0.2s', // 添加过渡效果
               '&:hover': {
-                transform: 'translateY(-90%) scale(1.05)', // 悬停时略微放大
+                transform: { 
+                  xs: 'scale(1.05)', 
+                  sm: 'translateY(-90%) scale(1.05)', 
+                  md: 'translateY(-90%) scale(1.05)'
+                }, // 悬停时略微放大，移动端不需要Y轴平移
               },
               '&:active': {
-                transform: 'translateY(-90%) scale(0.95)', // 点击时略微缩小
+                transform: { 
+                  xs: 'scale(0.95)', 
+                  sm: 'translateY(-90%) scale(0.95)', 
+                  md: 'translateY(-90%) scale(0.95)'
+                }, // 点击时略微缩小，移动端不需要Y轴平移
               },
               userSelect: 'none', // 防止文本被选中
               WebkitUserSelect: 'none',
               MozUserSelect: 'none',
-              msUserSelect: 'none'
+              msUserSelect: 'none',
+              WebkitTapHighlightColor: 'transparent', // 移除移动设备点击高亮
+              outline: 'none', // 移除点击轮廓
+              position: 'relative', // 需要相对定位以便放置动画
             }}
-            onClick={handleLogoClick} // 添加点击事件处理
+            onMouseDown={handleLogoMouseDown}
+            onMouseUp={handleLogoMouseUp}
+            onMouseLeave={handleLogoMouseLeave}
+            onTouchStart={handleLogoMouseDown}
+            onTouchEnd={handleLogoMouseUp}
+            onTouchCancel={handleLogoMouseLeave}
           >
             {/* 透明蒙版，接收所有点击事件 */}
             <Box 
@@ -766,6 +897,40 @@ function App() {
                 zIndex: 10,
               }}
             />
+            
+            {/* 彩虹划过动画 */}
+            {showAnimation && (
+              <Box
+                sx={{
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  zIndex: 5,
+                  background: `linear-gradient(
+                    to bottom,
+                    #FF0000 0%,
+                    #FF0000 14.28%,
+                    #FF7F00 14.28%, 
+                    #FF7F00 28.57%,
+                    #FFFF00 28.57%,
+                    #FFFF00 42.85%,
+                    #00FF00 42.85%,
+                    #00FF00 57.14%,
+                    #00FFFF 57.14%,
+                    #00FFFF 71.42%,
+                    #0000FF 71.42%,
+                    #0000FF 85.71%,
+                    #8B00FF 85.71%,
+                    #8B00FF 100%
+                  )`,
+                  animation: `${animationDirection === 'forward' ? 'rainbow-sweep-right' : 'rainbow-sweep-left'} 1s ease-out forwards`,
+                  opacity: 0
+                }}
+              />
+            )}
+            
             <Typography component="span" sx={{ color: rainbowColors[logoColorIndices[0]], lineHeight: 0.8, fontSize: 'inherit', transition: 'color 0.3s' }}>M</Typography>
             <Typography component="span" sx={{ color: rainbowColors[logoColorIndices[1]], lineHeight: 0.8, fontSize: 'inherit', transition: 'color 0.3s' }}>v</Typography>
             <Typography component="span" sx={{ color: rainbowColors[logoColorIndices[2]], lineHeight: 0.8, fontSize: 'inherit', transition: 'color 0.3s' }}>i</Typography>
@@ -775,8 +940,14 @@ function App() {
             <Typography component="span" sx={{ color: rainbowColors[logoColorIndices[6]], lineHeight: 0.8, fontSize: 'inherit', transition: 'color 0.3s' }}>v</Typography>
           </Box>
           
-          {/* 搜索框表单 */}
-          <Box component="form" onSubmit={handleSearch} sx={{ width: '100%', maxWidth: 600, position: 'relative', zIndex: 2 }}>
+          {/* 真正的搜索框表单 */}
+          <Box component="form" onSubmit={handleSearch} sx={{ 
+            width: '100%', 
+            maxWidth: 600,
+            position: 'relative', 
+            zIndex: 2,
+            px: { xs: 3, sm: 2, md: 0 }, // 移动端添加左右内边距
+          }}>
             <Paper 
               ref={searchRef} 
               elevation={3}
@@ -786,6 +957,8 @@ function App() {
                 boxShadow: useBingWallpaper ? '0 4px 20px rgba(0, 0, 0, 0.2)' : undefined,
                 position: 'relative',
                 transition: 'box-shadow 0.3s ease-in-out',
+                width: { xs: '100%', sm: '90%', md: '100%' }, // 在sm尺寸下减小宽度
+                mx: 'auto', // 水平居中
                 '&:hover': {
                   boxShadow: actualDarkMode 
                     ? '0 0 15px 5px rgba(100, 181, 246, 0.6), 0 0 30px 10px rgba(100, 181, 246, 0.2)' 
