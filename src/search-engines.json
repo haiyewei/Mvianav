@@ -16,11 +16,6 @@
             "description": "视频搜索引擎"
         },
         {
-            "id": "aolig",
-            "name": "奥里给",
-            "description": "视高丽华"
-        },
-        {
             "id": "music",
             "name": "音乐",
             "description": "音乐搜索引擎"
@@ -81,14 +76,6 @@
             "url": "https://music.163.com/#/search/m/?s={query}",
             "categories": [
                 "music"
-            ]
-        },
-        {
-            "id": "dadfafaf",
-            "name": "aoliug ",
-            "url": "https://music.163.com/#/search/m/?s={query}",
-            "categories": [
-                "aolig"
             ]
         },
         {

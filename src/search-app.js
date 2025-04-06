@@ -703,7 +703,7 @@ export class SearchApp extends LitElement {
   // 生成搜索提示文字
   _getSearchPlaceholder() {
     if (!this.selectedEngine) {
-      return "搜索...";
+      return "Mvianav 搜索...";
     }
     
     const engineName = this.selectedEngine.name;
@@ -737,8 +737,8 @@ export class SearchApp extends LitElement {
           <!-- 搜索引擎显示区域 -->
           <div class="engine-display">
             <div class="engine-display-text">
-              <div class="engine-display-icon">${this.selectedEngine ? this._getEngineInitial(this.selectedEngine.name) : '?'}</div>
-              ${this.selectedEngine ? this.selectedEngine.name : '选择搜索引擎'}
+              <div class="engine-display-icon">${this.selectedEngine ? this._getEngineInitial(this.selectedEngine.name) : 'M'}</div>
+              ${this.selectedEngine ? this.selectedEngine.name : 'Mvianav 搜索引擎'}
             </div>
           </div>
           
