@@ -1,0 +1,44 @@
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: Arial, sans-serif;
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: #fff;
+  position: relative;
+  overflow-x: hidden;
+}
+
+.search-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  max-width: 584px;
+  padding: 20px;
+}
+
+/* 确保搜索框中的文本居中 */
+md-outlined-text-field::part(input),
+md-outlined-text-field input {
+  text-align: center !important;
+}
+
+.centered-text input,
+.centered-text::part(input) {
+  text-align: center !important;
+}
+
+/* 边栏全屏样式 */
+.search-sidebar {
+  position: fixed;
+  margin-top: 44px; /* 搜索框高度 */
+  width: 100%;
+  max-width: 584px; /* 与搜索框宽度一致 */
+} 

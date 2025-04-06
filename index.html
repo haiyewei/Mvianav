@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>多引擎搜索</title>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
+      background-color: #f7f9fc;
+    }
+
+    .container {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 600px;
+      max-width: 92%;
+    }
+
+    /* 响应式布局 */
+    @media screen and (min-width: 1200px) {
+      .container {
+        width: 700px;
+      }
+    }
+
+    @media screen and (max-width: 600px) {
+      .container {
+        width: 92%;
+      }
+    }
+  </style>
+  <script type="module" src="./src/search-app.js"></script>
+</head>
+<body>
+  <div class="container">
+    <search-app></search-app>
+  </div>
+</body>
+</html> 

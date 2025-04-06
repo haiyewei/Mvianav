@@ -1,0 +1,36 @@
+/* Material Web 组件自定义样式 */
+
+/* 搜索框居中样式 */
+md-outlined-text-field::part(input-wrapper),
+md-outlined-text-field::part(input) {
+  text-align: center !important;
+}
+
+md-outlined-text-field input,
+md-outlined-text-field input::placeholder {
+  text-align: center !important;
+}
+
+/* 强制覆盖默认样式 */
+.centered-text input {
+  text-align: center !important;
+}
+
+/* 搜索边栏自定义样式 */
+.search-sidebar {
+  backdrop-filter: blur(5px);
+}
+
+.search-sidebar.active {
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
+
+.search-sidebar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.search-sidebar::-webkit-scrollbar-thumb {
+  background-color: rgba(0, 0, 0, 0.2);
+  border-radius: 3px;
+} 

@@ -1,0 +1,103 @@
+{
+    "categories": [
+        {
+            "id": "all",
+            "name": "全部",
+            "description": "所有搜索引擎"
+        },
+        {
+            "id": "common",
+            "name": "常用",
+            "description": "常用搜索引擎"
+        },
+        {
+            "id": "video",
+            "name": "视频",
+            "description": "视频搜索引擎"
+        },
+        {
+            "id": "aolig",
+            "name": "奥里给",
+            "description": "视高丽华"
+        },
+        {
+            "id": "music",
+            "name": "音乐",
+            "description": "音乐搜索引擎"
+        }
+    ],
+    "engines": [
+        {
+            "id": "google",
+            "name": "Google",
+            "url": "https://www.google.com/search?q={query}",
+            "categories": [
+                "common"
+            ]
+        },
+        {
+            "id": "bing",
+            "name": "Bing",
+            "url": "https://www.bing.com/search?q={query}",
+            "categories": [
+                "common"
+            ]
+        },
+        {
+            "id": "360",
+            "name": "360搜索",
+            "url": "https://www.so.com/s?q={query}",
+            "categories": [
+                "common"
+            ]
+        },
+        {
+            "id": "baidu",
+            "name": "百度",
+            "url": "https://www.baidu.com/s?wd={query}",
+            "categories": [
+                "common"
+            ]
+        },
+        {
+            "id": "youtube",
+            "name": "YouTube",
+            "url": "https://www.youtube.com/results?search_query={query}",
+            "categories": [
+                "video"
+            ]
+        },
+        {
+            "id": "bilibili",
+            "name": "哔哩哔哩",
+            "url": "https://search.bilibili.com/all?keyword={query}",
+            "categories": [
+                "video"
+            ]
+        },
+        {
+            "id": "netease",
+            "name": "网易云音乐",
+            "url": "https://music.163.com/#/search/m/?s={query}",
+            "categories": [
+                "music"
+            ]
+        },
+        {
+            "id": "dadfafaf",
+            "name": "aoliug ",
+            "url": "https://music.163.com/#/search/m/?s={query}",
+            "categories": [
+                "aolig"
+            ]
+        },
+        {
+            "id": "qqmusic",
+            "name": "QQ音乐",
+            "url": "https://y.qq.com/n/ryqq/search?w={query}",
+            "categories": [
+                "music"
+            ]
+        }
+    ]
+}
