@@ -46,18 +46,25 @@ export class SearchApp extends LitElement {
       // 尝试多种可能的路径
       let response;
       const possiblePaths = [
+        './search-engines.json',
+        '/search-engines.json',
+        'search-engines.json',
+        './assets/search-engines.json',
+        '/assets/search-engines.json',
+        'assets/search-engines.json',
         './src/search-engines.json',
         '/src/search-engines.json',
         'src/search-engines.json',
-        '../src/search-engines.json',
-        'search-engines.json'
+        '../src/search-engines.json'
       ];
       
       let loadError = null;
       for (const path of possiblePaths) {
         try {
+          console.log(`尝试加载路径: ${path}`);
           response = await fetch(path);
           if (response.ok) {
+            console.log(`成功从路径加载: ${path}`);
             loadError = null;
             break;
           }
