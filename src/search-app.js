@@ -19,7 +19,8 @@ export class SearchApp extends LitElement {
     hasText: { type: Boolean, reflect: true },
     engineSelected: { type: Boolean },
     categorySelected: { type: Boolean },
-    loadError: { type: Boolean }
+    loadError: { type: Boolean },
+    isCardInteracting: { type: Boolean }
   };
 
   constructor() {
@@ -35,6 +36,7 @@ export class SearchApp extends LitElement {
     this.engineSelected = false;
     this.categorySelected = false;
     this.loadError = false;
+    this.isCardInteracting = false;
     this._loadSearchEngines();
   }
 
@@ -79,6 +81,14 @@ export class SearchApp extends LitElement {
       this.selectedEngine = defaultEngine || this.searchEngines[0];
       this.isLoading = false;
       this.loadError = false;
+      
+      // 引擎加载完成后，更新搜索框的提示文字
+      this.updateAfterNextRender(() => {
+        const searchField = this.shadowRoot.querySelector('md-outlined-text-field');
+        if (searchField) {
+          searchField.placeholder = this._getSearchPlaceholder();
+        }
+      });
     } catch (error) {
       console.error('加载搜索引擎配置失败:', error);
       this.isLoading = false;
@@ -86,6 +96,14 @@ export class SearchApp extends LitElement {
       
       // 回退方案：如果无法加载配置，创建一些默认数据
       this._createFallbackData();
+      
+      // 引擎加载完成后，更新搜索框的提示文字
+      this.updateAfterNextRender(() => {
+        const searchField = this.shadowRoot.querySelector('md-outlined-text-field');
+        if (searchField) {
+          searchField.placeholder = this._getSearchPlaceholder();
+        }
+      });
       
       // 3秒后自动尝试再次加载
       setTimeout(() => {
@@ -132,6 +150,46 @@ export class SearchApp extends LitElement {
         }
       }, 100);
     }
+    
+    // 设置全局点击事件处理，用于检测点击卡片外部
+    document.addEventListener('click', (e) => {
+      // 当已经显示卡片时才进行处理
+      if (this.isFocused || this.hasText) {
+        const cardElement = this.shadowRoot.querySelector('.engine-card');
+        const searchFieldElement = this.shadowRoot.querySelector('md-outlined-text-field');
+        
+        // 检查点击是否在卡片或搜索框之外
+        if (cardElement && searchFieldElement) {
+          const clickInCard = e.composedPath().includes(cardElement);
+          const clickInSearchField = e.composedPath().includes(searchFieldElement);
+          
+          // 如果点击在卡片和搜索框之外，并且没有文本，则隐藏卡片
+          if (!clickInCard && !clickInSearchField && !this.isCardInteracting && !this.hasText) {
+            this.isFocused = false;
+          }
+        }
+      }
+    });
+    
+    // 添加卡片交互监听
+    const cardElement = this.shadowRoot.querySelector('.engine-card');
+    if (cardElement) {
+      cardElement.addEventListener('mouseenter', () => {
+        this.isCardInteracting = true;
+      });
+      
+      cardElement.addEventListener('mouseleave', () => {
+        // 鼠标离开时，延迟一段时间再设置为非交互状态
+        setTimeout(() => {
+          this.isCardInteracting = false;
+        }, 300);
+      });
+      
+      // 针对移动设备的触摸事件
+      cardElement.addEventListener('touchstart', () => {
+        this.isCardInteracting = true;
+      }, { passive: true });
+    }
   }
 
   _handleFocus() {
@@ -141,8 +199,8 @@ export class SearchApp extends LitElement {
   _handleBlur(e) {
     // 延迟处理失焦事件，确保点击卡片内元素不会导致卡片隐藏
     setTimeout(() => {
-      // 如果刚刚选择了引擎或切换了分类，则不立即隐藏卡片
-      if (this.engineSelected || this.categorySelected) {
+      // 如果正在与卡片交互、刚刚选择了引擎或切换了分类，则不隐藏卡片
+      if (this.isCardInteracting || this.engineSelected || this.categorySelected) {
         this.engineSelected = false;
         this.categorySelected = false;
         return;
@@ -158,7 +216,7 @@ export class SearchApp extends LitElement {
       }
       
       this.isFocused = false;
-    }, 10);
+    }, 100); // 增加延迟时间，给用户更多的操作时间
   }
 
   _handleInput(e) {
@@ -176,6 +234,14 @@ export class SearchApp extends LitElement {
       const searchUrl = this.selectedEngine.url.replace('{query}', encodeURIComponent(this.searchText));
       window.open(searchUrl, '_blank');
     }
+  }
+
+  // 在下一次渲染完成后执行回调
+  updateAfterNextRender(callback) {
+    this.requestUpdate();
+    setTimeout(() => {
+      callback();
+    }, 10);
   }
 
   static styles = css`
@@ -214,12 +280,37 @@ export class SearchApp extends LitElement {
       --md-outlined-text-field-input-text-align: center;
       --md-outlined-text-field-input-text-font: 16px 'Arial', sans-serif;
       --md-outlined-text-field-input-text-weight: 400;
+      --md-outlined-text-field-input-text-placeholder-color: rgba(0, 0, 0, 0.4);
       min-width: 300px;
     }
 
-    /* 添加自定义样式以确保文本居中 */
+    /* 添加自定义样式以确保文本居中和提示文字透明度 */
     md-outlined-text-field::part(input) {
       text-align: center;
+    }
+
+    /* 针对不同浏览器的placeholder透明度调整 */
+    md-outlined-text-field::part(input)::placeholder {
+      opacity: 0.6;
+      color: rgba(0, 0, 0, 0.4);
+    }
+
+    /* Firefox特定的placeholder样式 */
+    md-outlined-text-field::part(input)::-moz-placeholder {
+      opacity: 0.6;
+      color: rgba(0, 0, 0, 0.4);
+    }
+
+    /* WebKit浏览器的placeholder样式 */
+    md-outlined-text-field::part(input)::-webkit-input-placeholder {
+      opacity: 0.6;
+      color: rgba(0, 0, 0, 0.4);
+    }
+
+    /* Edge的placeholder样式 */
+    md-outlined-text-field::part(input)::-ms-input-placeholder {
+      opacity: 0.6;
+      color: rgba(0, 0, 0, 0.4);
     }
 
     /* 引擎卡片样式 - 使用动画代替display属性 */
@@ -514,7 +605,11 @@ export class SearchApp extends LitElement {
     }
 
     this.categorySelected = true;
+    this.isCardInteracting = true; // 标记正在与卡片交互
     this.selectedCategory = categoryId;
+    
+    // 标记是否引擎已变更
+    let engineChanged = false;
     
     // 如果当前选中的搜索引擎不在新选中的分类中，则重新选择一个
     const currentEngineInCategory = this.selectedEngine && 
@@ -526,10 +621,19 @@ export class SearchApp extends LitElement {
       const newEngine = this.searchEngines.find(engine => 
         categoryId === 'all' || engine.categories.includes(categoryId));
       this.selectedEngine = newEngine || null;
+      engineChanged = true;
     }
     
     // 请求更新，确保UI正确显示筛选后的引擎列表
     this.requestUpdate();
+    
+    // 如果引擎变更了，需要更新搜索框的提示文字
+    if (engineChanged) {
+      const searchField = this.shadowRoot.querySelector('md-outlined-text-field');
+      if (searchField) {
+        searchField.placeholder = this._getSearchPlaceholder();
+      }
+    }
     
     // 在更短的延迟后重新聚焦搜索框，确保分类切换后不会失去焦点
     clearTimeout(this._focusTimeout); // 清除之前可能存在的定时器
@@ -538,11 +642,17 @@ export class SearchApp extends LitElement {
       if (searchField) {
         searchField.focus();
       }
+      
+      // 保持卡片交互状态一段时间，以便用户可以继续操作
+      setTimeout(() => {
+        this.isCardInteracting = false;
+      }, 800);
     }, 5);
   }
 
   _handleEngineSelect(engine) {
     this.engineSelected = true;
+    this.isCardInteracting = true; // 标记正在与卡片交互
     this.selectedEngine = engine;
     
     // 不再自动执行搜索，只有用户按回车时才执行搜索
@@ -550,13 +660,23 @@ export class SearchApp extends LitElement {
     
     this.requestUpdate();
     
+    // 更新搜索框中的占位符文本
+    const searchField = this.shadowRoot.querySelector('md-outlined-text-field');
+    if (searchField) {
+      searchField.placeholder = this._getSearchPlaceholder();
+    }
+    
     // 清除之前可能存在的定时器
     clearTimeout(this._focusTimeout);
     this._focusTimeout = setTimeout(() => {
-      const searchField = this.shadowRoot.querySelector('md-outlined-text-field');
       if (searchField) {
         searchField.focus();
       }
+      
+      // 保持卡片交互状态一段时间，以便用户可以继续操作
+      setTimeout(() => {
+        this.isCardInteracting = false;
+      }, 800);
     }, 5);
   }
 
@@ -573,6 +693,16 @@ export class SearchApp extends LitElement {
     return name.charAt(0);
   }
 
+  // 生成搜索提示文字
+  _getSearchPlaceholder() {
+    if (!this.selectedEngine) {
+      return "搜索...";
+    }
+    
+    const engineName = this.selectedEngine.name;
+    return `${engineName}一下，你就知道${engineName}知道得很多......`;
+  }
+
   render() {
     const filteredEngines = this._getFilteredEngines();
     
@@ -580,7 +710,7 @@ export class SearchApp extends LitElement {
       <div class="search-container">
         <div class="search-field-container">
           <md-outlined-text-field
-            placeholder="搜索..."
+            placeholder="${this._getSearchPlaceholder()}"
             type="search"
             style="text-align: center;"
             class="centered-text"
@@ -593,7 +723,10 @@ export class SearchApp extends LitElement {
         </div>
         
         <!-- 引擎卡片：包含搜索引擎信息和分类选择器 -->
-        <div class="engine-card">
+        <div class="engine-card" 
+          @mousedown="${() => { this.isCardInteracting = true; }}"
+          @touchstart="${() => { this.isCardInteracting = true; }}"
+        >
           <!-- 搜索引擎显示区域 -->
           <div class="engine-display">
             <div class="engine-display-text">
@@ -628,6 +761,8 @@ export class SearchApp extends LitElement {
                       <div 
                         class="engine-item ${this.selectedEngine && this.selectedEngine.id === engine.id ? 'selected' : ''}"
                         @click="${() => this._handleEngineSelect(engine)}"
+                        @mousedown="${() => { this.isCardInteracting = true; }}"
+                        @touchstart="${() => { this.isCardInteracting = true; }}"
                       >
                         <md-ripple></md-ripple>
                         <div class="engine-icon">${this._getEngineInitial(engine.name)}</div>
