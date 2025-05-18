@@ -1,11 +1,10 @@
-import { LitElement, html, css } from 'lit';
-import '@material/web/textfield/outlined-text-field';
-import '@material/web/tabs/primary-tab.js';
-import '@material/web/tabs/tabs.js';
-import '@material/web/button/text-button.js';
-import '@material/web/ripple/ripple.js';
-import '@material/web/icon/icon.js';
-import { argbFromHex, themeFromSourceColor } from '@material/material-color-utilities';
+import { LitElement, html, css } from "lit";
+import "@material/web/textfield/outlined-text-field";
+import "@material/web/tabs/primary-tab.js";
+import "@material/web/tabs/tabs.js";
+import "@material/web/button/text-button.js";
+import "@material/web/ripple/ripple.js";
+import "@material/web/icon/icon.js";
 
 export class SearchApp extends LitElement {
   static properties = {
@@ -20,17 +19,17 @@ export class SearchApp extends LitElement {
     engineSelected: { type: Boolean },
     categorySelected: { type: Boolean },
     loadError: { type: Boolean },
-    isCardInteracting: { type: Boolean }
+    isCardInteracting: { type: Boolean },
   };
 
   constructor() {
     super();
     this.isFocused = false;
-    this.searchText = '';
+    this.searchText = "";
     this.hasText = false;
     this.searchEngines = [];
     this.categories = [];
-    this.selectedCategory = 'common'; // 默认选择"常用"分类
+    this.selectedCategory = "common"; // 默认选择"常用"分类
     this.selectedEngine = null;
     this.isLoading = true;
     this.engineSelected = false;
@@ -38,6 +37,82 @@ export class SearchApp extends LitElement {
     this.loadError = false;
     this.isCardInteracting = false;
     this._loadSearchEngines();
+    this._initTheme();
+  }
+
+  _initTheme() {
+    this._darkModeMatcher = window.matchMedia("(prefers-color-scheme: dark)");
+    this._darkModeMatcher.addEventListener("change", this._applyTheme);
+    this._applyTheme();
+  }
+
+  _applyTheme = () => {
+    if (this._darkModeMatcher.matches) {
+      document.body.classList.add("dark-theme");
+      document.body.classList.remove("light-theme");
+    } else {
+      document.body.classList.add("light-theme");
+      document.body.classList.remove("dark-theme");
+    }
+    
+    // 添加一个短暂延迟确保 CSS 变量已被应用到 body 上
+    setTimeout(() => this._updateThemeVariables(), 10);
+  };
+
+  connectedCallback() {
+    super.connectedCallback();
+    // Ensure theme is applied when component is connected
+    // This is important if the component is added to the DOM after initial load
+    if (this._darkModeMatcher) {
+      this._applyTheme();
+    } else {
+      // Fallback or error handling if _darkModeMatcher is not initialized
+      this._initTheme();
+    }
+
+    // 添加这一部分：将主题变量从 document.body 传递到组件的 host
+    this._updateThemeVariables();
+    // 监听主题变化以更新变量
+    this._themeObserver = new MutationObserver(() => {
+      this._updateThemeVariables();
+    });
+    this._themeObserver.observe(document.body, { attributes: true, attributeFilter: ['class'] });
+  }
+
+  disconnectedCallback() {
+    super.disconnectedCallback();
+    if (this._darkModeMatcher) {
+      this._darkModeMatcher.removeEventListener("change", this._applyTheme);
+    }
+    // 清理观察器
+    if (this._themeObserver) {
+      this._themeObserver.disconnect();
+    }
+  }
+
+  // 创建一个新方法来更新主题变量
+  _updateThemeVariables() {
+    // 从 document.body 计算样式
+    const computedStyle = getComputedStyle(document.body);
+    
+    // 主要颜色变量列表
+    const themeVars = [
+      "primary", "on-primary", "primary-container", "on-primary-container",
+      "secondary", "on-secondary", "secondary-container", "on-secondary-container",
+      "tertiary", "on-tertiary", "tertiary-container", "on-tertiary-container",
+      "error", "on-error", "error-container", "on-error-container",
+      "background", "on-background", "surface", "on-surface", 
+      "surface-variant", "on-surface-variant", "outline", "shadow"
+    ];
+    
+    // 为每个变量创建 CSS 自定义属性
+    themeVars.forEach(varName => {
+      const cssVarName = `--md-sys-color-${varName}`;
+      const value = computedStyle.getPropertyValue(cssVarName).trim();
+      if (value) {
+        this.style.setProperty(cssVarName, value);
+      }
+    });
   }
 
   async _loadSearchEngines() {
@@ -46,18 +121,18 @@ export class SearchApp extends LitElement {
       // 尝试多种可能的路径
       let response;
       const possiblePaths = [
-        './search-engines.json',
-        '/search-engines.json',
-        'search-engines.json',
-        './assets/search-engines.json',
-        '/assets/search-engines.json',
-        'assets/search-engines.json',
-        './src/search-engines.json',
-        '/src/search-engines.json',
-        'src/search-engines.json',
-        '../src/search-engines.json'
+        "./search-engines.json",
+        "/search-engines.json",
+        "search-engines.json",
+        "./assets/search-engines.json",
+        "/assets/search-engines.json",
+        "assets/search-engines.json",
+        "./src/search-engines.json",
+        "/src/search-engines.json",
+        "src/search-engines.json",
+        "../src/search-engines.json",
       ];
-      
+
       let loadError = null;
       for (const path of possiblePaths) {
         try {
@@ -73,45 +148,52 @@ export class SearchApp extends LitElement {
           console.log(`尝试路径 ${path} 失败:`, e.message);
         }
       }
-      
+
       if (!response || !response.ok) {
-        throw new Error(loadError ? loadError.message : '无法加载搜索引擎配置文件');
+        throw new Error(
+          loadError ? loadError.message : "无法加载搜索引擎配置文件"
+        );
       }
-      
+
       const data = await response.json();
       this.categories = data.categories;
       this.searchEngines = data.engines;
-      
+
       // 设置默认选中的搜索引擎为第一个常用搜索引擎
-      const defaultEngine = this.searchEngines.find(engine => 
-        engine.categories.includes(this.selectedCategory));
+      const defaultEngine = this.searchEngines.find((engine) =>
+        engine.categories.includes(this.selectedCategory)
+      );
       this.selectedEngine = defaultEngine || this.searchEngines[0];
       this.isLoading = false;
       this.loadError = false;
-      
+
       // 引擎加载完成后，更新搜索框的提示文字
       this.updateAfterNextRender(() => {
-        const searchField = this.shadowRoot.querySelector('md-outlined-text-field');
+        const searchField = this.shadowRoot.querySelector(
+          "md-outlined-text-field"
+        );
         if (searchField) {
           searchField.placeholder = this._getSearchPlaceholder();
         }
       });
     } catch (error) {
-      console.error('加载搜索引擎配置失败:', error);
+      console.error("加载搜索引擎配置失败:", error);
       this.isLoading = false;
       this.loadError = true;
-      
+
       // 回退方案：如果无法加载配置，创建一些默认数据
       this._createFallbackData();
-      
+
       // 引擎加载完成后，更新搜索框的提示文字
       this.updateAfterNextRender(() => {
-        const searchField = this.shadowRoot.querySelector('md-outlined-text-field');
+        const searchField = this.shadowRoot.querySelector(
+          "md-outlined-text-field"
+        );
         if (searchField) {
           searchField.placeholder = this._getSearchPlaceholder();
         }
       });
-      
+
       // 3秒后自动尝试再次加载
       setTimeout(() => {
         if (this.loadError) {
@@ -120,108 +202,125 @@ export class SearchApp extends LitElement {
       }, 3000);
     }
   }
-  
+
   _createFallbackData() {
     this.categories = [
-      { id: 'common', name: '常用', description: '常用搜索引擎' },
-      { id: 'video', name: '视频', description: '视频搜索引擎' }
+      { id: "common", name: "常用", description: "常用搜索引擎" },
+      { id: "video", name: "视频", description: "视频搜索引擎" },
     ];
-    
+
     this.searchEngines = [
-      { 
-        id: 'google', 
-        name: 'Google', 
-        url: 'https://www.google.com/search?q={query}',
-        categories: ['common']
+      {
+        id: "google",
+        name: "Google",
+        url: "https://www.google.com/search?q={query}",
+        categories: ["common"],
       },
-      { 
-        id: 'bing', 
-        name: 'Bing', 
-        url: 'https://www.bing.com/search?q={query}',
-        categories: ['common']
-      }
+      {
+        id: "bing",
+        name: "Bing",
+        url: "https://www.bing.com/search?q={query}",
+        categories: ["common"],
+      },
     ];
-    
+
     this.selectedEngine = this.searchEngines[0];
   }
 
   firstUpdated() {
     // 获取搜索框元素并直接设置样式
-    const searchField = this.shadowRoot.querySelector('md-outlined-text-field');
+    const searchField = this.shadowRoot.querySelector("md-outlined-text-field");
     if (searchField) {
       // 尝试找到输入框元素并应用居中样式
       setTimeout(() => {
-        const input = searchField.shadowRoot?.querySelector('input');
+        const input = searchField.shadowRoot?.querySelector("input");
         if (input) {
-          input.style.textAlign = 'center';
+          input.style.textAlign = "center";
         }
       }, 100);
     }
-    
+
     // 设置全局点击事件处理，用于检测点击卡片外部
-    document.addEventListener('click', (e) => {
+    document.addEventListener("click", (e) => {
       // 当已经显示卡片时才进行处理
       if (this.isFocused || this.hasText) {
-        const cardElement = this.shadowRoot.querySelector('.engine-card');
-        const searchFieldElement = this.shadowRoot.querySelector('md-outlined-text-field');
-        
+        const cardElement = this.shadowRoot.querySelector(".engine-card");
+        const searchFieldElement = this.shadowRoot.querySelector(
+          "md-outlined-text-field"
+        );
+
         // 检查点击是否在卡片或搜索框之外
         if (cardElement && searchFieldElement) {
           const clickInCard = e.composedPath().includes(cardElement);
-          const clickInSearchField = e.composedPath().includes(searchFieldElement);
-          
+          const clickInSearchField = e
+            .composedPath()
+            .includes(searchFieldElement);
+
           // 如果点击在卡片和搜索框之外，并且没有文本，则隐藏卡片
-          if (!clickInCard && !clickInSearchField && !this.isCardInteracting && !this.hasText) {
+          if (
+            !clickInCard &&
+            !clickInSearchField &&
+            !this.isCardInteracting &&
+            !this.hasText
+          ) {
             this.isFocused = false;
           }
         }
       }
     });
-    
+
     // 添加卡片交互监听
-    const cardElement = this.shadowRoot.querySelector('.engine-card');
+    const cardElement = this.shadowRoot.querySelector(".engine-card");
     if (cardElement) {
-      cardElement.addEventListener('mouseenter', () => {
+      cardElement.addEventListener("mouseenter", () => {
         this.isCardInteracting = true;
       });
-      
-      cardElement.addEventListener('mouseleave', () => {
+
+      cardElement.addEventListener("mouseleave", () => {
         // 鼠标离开时，延迟一段时间再设置为非交互状态
         setTimeout(() => {
           this.isCardInteracting = false;
         }, 300);
       });
-      
+
       // 针对移动设备的触摸事件
-      cardElement.addEventListener('touchstart', () => {
-        this.isCardInteracting = true;
-      }, { passive: true });
+      cardElement.addEventListener(
+        "touchstart",
+        () => {
+          this.isCardInteracting = true;
+        },
+        { passive: true }
+      );
     }
   }
 
   _handleFocus() {
     this.isFocused = true;
   }
-  
-  _handleBlur(e) {
+
+  _handleBlur(_e) {
     // 延迟处理失焦事件，确保点击卡片内元素不会导致卡片隐藏
     setTimeout(() => {
       // 如果正在与卡片交互、刚刚选择了引擎或切换了分类，则不隐藏卡片
-      if (this.isCardInteracting || this.engineSelected || this.categorySelected) {
+      if (
+        this.isCardInteracting ||
+        this.engineSelected ||
+        this.categorySelected
+      ) {
         this.engineSelected = false;
         this.categorySelected = false;
         return;
       }
-      
+
       // 检查当前活动元素是否是卡片内的元素
       const activeElement = this.shadowRoot.activeElement;
-      const cardElement = this.shadowRoot.querySelector('.engine-card');
-      
+      const cardElement = this.shadowRoot.querySelector(".engine-card");
+
       if (activeElement && cardElement && cardElement.contains(activeElement)) {
         // 如果活动元素在卡片内，不隐藏卡片
         return;
       }
-      
+
       this.isFocused = false;
     }, 100); // 增加延迟时间，给用户更多的操作时间
   }
@@ -230,16 +329,19 @@ export class SearchApp extends LitElement {
     this.searchText = e.target.value;
     this.hasText = this.searchText && this.searchText.length > 0;
     if (this.hasText) {
-      this.setAttribute('hasText', '');
+      this.setAttribute("hasText", "");
     } else {
-      this.removeAttribute('hasText');
+      this.removeAttribute("hasText");
     }
   }
 
   _handleSearch(e) {
-    if (e.key === 'Enter' && this.searchText && this.selectedEngine) {
-      const searchUrl = this.selectedEngine.url.replace('{query}', encodeURIComponent(this.searchText));
-      window.open(searchUrl, '_blank');
+    if (e.key === "Enter" && this.searchText && this.selectedEngine) {
+      const searchUrl = this.selectedEngine.url.replace(
+        "{query}",
+        encodeURIComponent(this.searchText)
+      );
+      window.open(searchUrl, "_blank");
     }
   }
 
@@ -255,11 +357,13 @@ export class SearchApp extends LitElement {
     :host {
       display: block;
       width: 100%;
-      --primary-color: #1a73e8;
-      --hover-color: #e8f0fe;
-      --surface-color: #ffffff;
-      --border-color: #e0e0e0;
+      --primary-color: var(--md-sys-color-primary, #6750A4);
+      --on-primary-color: var(--md-sys-color-on-primary, #FFFFFF);
+      --surface-color: var(--md-sys-color-surface, #FFFBFE);
+      --hover-color: var(--md-sys-color-primary-container, #EADDFF);
+      --border-color: var(--md-sys-color-outline, #79747E);
       --animation-duration: 0.3s;
+      color: var(--md-sys-color-on-background, #1C1B1F);
     }
 
     .search-container {
@@ -285,9 +389,9 @@ export class SearchApp extends LitElement {
       --md-outlined-text-field-container-shape: 24px;
       --md-outlined-text-field-container-height: 44px;
       --md-outlined-text-field-input-text-align: center;
-      --md-outlined-text-field-input-text-font: 16px 'Arial', sans-serif;
+      --md-outlined-text-field-input-text-font: 16px "Arial", sans-serif;
       --md-outlined-text-field-input-text-weight: 400;
-      --md-outlined-text-field-input-text-placeholder-color: rgba(0, 0, 0, 0.4);
+      --md-outlined-text-field-input-text-placeholder-color: var(--md-sys-color-on-surface-variant, rgba(0, 0, 0, 0.4));
       min-width: 300px;
     }
 
@@ -299,25 +403,25 @@ export class SearchApp extends LitElement {
     /* 针对不同浏览器的placeholder透明度调整 */
     md-outlined-text-field::part(input)::placeholder {
       opacity: 0.6;
-      color: rgba(0, 0, 0, 0.4);
+      color: var(--md-sys-color-on-surface-variant, rgba(0, 0, 0, 0.4));
     }
 
     /* Firefox特定的placeholder样式 */
     md-outlined-text-field::part(input)::-moz-placeholder {
       opacity: 0.6;
-      color: rgba(0, 0, 0, 0.4);
+      color: var(--md-sys-color-on-surface-variant, rgba(0, 0, 0, 0.4));
     }
 
     /* WebKit浏览器的placeholder样式 */
     md-outlined-text-field::part(input)::-webkit-input-placeholder {
       opacity: 0.6;
-      color: rgba(0, 0, 0, 0.4);
+      color: var(--md-sys-color-on-surface-variant, rgba(0, 0, 0, 0.4));
     }
 
     /* Edge的placeholder样式 */
     md-outlined-text-field::part(input)::-ms-input-placeholder {
       opacity: 0.6;
-      color: rgba(0, 0, 0, 0.4);
+      color: var(--md-sys-color-on-surface-variant, rgba(0, 0, 0, 0.4));
     }
 
     /* 引擎卡片样式 - 使用动画代替display属性 */
@@ -325,7 +429,7 @@ export class SearchApp extends LitElement {
       display: flex;
       flex-direction: column;
       width: 100%;
-      background-color: white;
+      background-color: var(--md-sys-color-surface, white);
       border-radius: 16px;
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
       overflow: hidden;
@@ -346,7 +450,10 @@ export class SearchApp extends LitElement {
     /* 聚焦或有文本时显示卡片 */
     :host([isFocused]) .engine-card,
     :host([hasText]) .engine-card {
-      max-height: min(600px, 80vh); /* 使用视口高度的百分比，确保在小屏幕上不会过大 */
+      max-height: min(
+        600px,
+        80vh
+      ); /* 使用视口高度的百分比，确保在小屏幕上不会过大 */
       opacity: 1;
       transform: translateY(0);
       pointer-events: auto;
@@ -362,13 +469,13 @@ export class SearchApp extends LitElement {
       font-size: 16px;
       font-weight: 500;
       color: var(--primary-color);
-      background-color: white;
+      background-color: var(--surface-color);
       position: relative;
       overflow: hidden;
       user-select: none;
       -webkit-tap-highlight-color: transparent;
       margin-bottom: 0;
-      border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+      border-bottom: 1px solid var(--md-sys-color-outline, rgba(0, 0, 0, 0.08));
       
       /* 动画效果 */
       opacity: 0;
@@ -405,7 +512,7 @@ export class SearchApp extends LitElement {
       height: 20px;
       border-radius: 50%;
       background-color: var(--primary-color);
-      color: white;
+      color: var(--on-primary-color);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -417,12 +524,13 @@ export class SearchApp extends LitElement {
       width: 100%;
       margin-top: 4px;
       margin-bottom: 4px;
-      transition: transform var(--animation-duration) ease, opacity var(--animation-duration) ease;
+      transition: transform var(--animation-duration) ease,
+        opacity var(--animation-duration) ease;
     }
     
     md-tabs {
       --md-primary-tab-container-color: transparent;
-      --md-primary-tab-label-text-color: #666;
+      --md-primary-tab-label-text-color: var(--md-sys-color-on-surface-variant, #666);
       --md-primary-tab-active-indicator-color: var(--primary-color);
       --md-primary-tab-active-label-text-color: var(--primary-color);
       --md-primary-tab-container-height: 48px;
@@ -478,7 +586,7 @@ export class SearchApp extends LitElement {
       align-items: center;
       justify-content: center;
       height: 76px;
-      background-color: #f8f8f8;
+      background-color: var(--md-sys-color-surface-variant, #f8f8f8);
       border-radius: 12px;
       padding: 10px 8px;
       cursor: pointer;
@@ -497,7 +605,7 @@ export class SearchApp extends LitElement {
     
     .engine-item:active {
       transform: translateY(0);
-      background-color: #e8e8e8;
+      background-color: var(--md-sys-color-surface-variant, #e8e8e8);
     }
 
     .engine-item.selected {
@@ -511,7 +619,7 @@ export class SearchApp extends LitElement {
       display: flex;
       align-items: center;
       justify-content: center;
-      background-color: #fff;
+      background-color: var(--md-sys-color-surface, #fff);
       border-radius: 50%;
       margin-bottom: 8px;
       font-size: 16px;
@@ -529,12 +637,13 @@ export class SearchApp extends LitElement {
       text-overflow: ellipsis;
       white-space: nowrap;
       transition: color var(--animation-duration) ease;
+      color: var(--md-sys-color-on-surface-variant, inherit);
     }
 
     .scroll-container {
       overflow-y: auto;
       scrollbar-width: thin;
-      scrollbar-color: #ccc transparent;
+      scrollbar-color: var(--md-sys-color-on-surface-variant, #ccc) transparent;
       padding: 0 4px;
       max-height: min(300px, 60vh); /* 使用视口高度的百分比 */
       margin-top: 4px;
@@ -551,7 +660,7 @@ export class SearchApp extends LitElement {
     }
 
     .scroll-container::-webkit-scrollbar-thumb {
-      background-color: #ccc;
+      background-color: var(--md-sys-color-on-surface-variant, #ccc);
       border-radius: 4px;
     }
 
@@ -565,7 +674,7 @@ export class SearchApp extends LitElement {
     .loading-spinner {
       width: 24px;
       height: 24px;
-      border: 3px solid rgba(0, 0, 0, 0.1);
+      border: 3px solid var(--md-sys-color-surface-variant, rgba(0, 0, 0, 0.1));
       border-radius: 50%;
       border-top-color: var(--primary-color);
       animation: spin 1s linear infinite;
@@ -580,27 +689,28 @@ export class SearchApp extends LitElement {
 
   updated(changedProperties) {
     // 当状态变化时触发更新
-    if (changedProperties.has('searchText') || 
-        changedProperties.has('isFocused') ||
-        changedProperties.has('selectedCategory')) {
-      
-      if (changedProperties.has('isFocused')) {
+    if (
+      changedProperties.has("searchText") ||
+      changedProperties.has("isFocused") ||
+      changedProperties.has("selectedCategory")
+    ) {
+      if (changedProperties.has("isFocused")) {
         if (this.isFocused) {
-          this.setAttribute('isFocused', '');
+          this.setAttribute("isFocused", "");
         } else {
-          this.removeAttribute('isFocused');
+          this.removeAttribute("isFocused");
         }
       }
-      
-      if (changedProperties.has('searchText')) {
+
+      if (changedProperties.has("searchText")) {
         this.hasText = this.searchText && this.searchText.length > 0;
         if (this.hasText) {
-          this.setAttribute('hasText', '');
+          this.setAttribute("hasText", "");
         } else {
-          this.removeAttribute('hasText');
+          this.removeAttribute("hasText");
         }
       }
-      
+
       this.requestUpdate();
     }
   }
@@ -614,42 +724,49 @@ export class SearchApp extends LitElement {
     this.categorySelected = true;
     this.isCardInteracting = true; // 标记正在与卡片交互
     this.selectedCategory = categoryId;
-    
+
     // 标记是否引擎已变更
     let engineChanged = false;
-    
+
     // 如果当前选中的搜索引擎不在新选中的分类中，则重新选择一个
-    const currentEngineInCategory = this.selectedEngine && 
-                                  (categoryId === 'all' || 
-                                   this.selectedEngine.categories.includes(categoryId));
-                                   
+    const currentEngineInCategory =
+      this.selectedEngine &&
+      (categoryId === "all" ||
+        this.selectedEngine.categories.includes(categoryId));
+
     if (!currentEngineInCategory) {
       // 找到新分类中的第一个搜索引擎
-      const newEngine = this.searchEngines.find(engine => 
-        categoryId === 'all' || engine.categories.includes(categoryId));
+      const newEngine = this.searchEngines.find(
+        (engine) =>
+          categoryId === "all" || engine.categories.includes(categoryId)
+      );
       this.selectedEngine = newEngine || null;
       engineChanged = true;
     }
-    
+
     // 请求更新，确保UI正确显示筛选后的引擎列表
     this.requestUpdate();
-    
+
     // 如果引擎变更了，需要更新搜索框的提示文字
     if (engineChanged) {
-      const searchField = this.shadowRoot.querySelector('md-outlined-text-field');
+      const searchField = this.shadowRoot.querySelector(
+        "md-outlined-text-field"
+      );
       if (searchField) {
         searchField.placeholder = this._getSearchPlaceholder();
       }
     }
-    
+
     // 在更短的延迟后重新聚焦搜索框，确保分类切换后不会失去焦点
     clearTimeout(this._focusTimeout); // 清除之前可能存在的定时器
     this._focusTimeout = setTimeout(() => {
-      const searchField = this.shadowRoot.querySelector('md-outlined-text-field');
+      const searchField = this.shadowRoot.querySelector(
+        "md-outlined-text-field"
+      );
       if (searchField) {
         searchField.focus();
       }
-      
+
       // 保持卡片交互状态一段时间，以便用户可以继续操作
       setTimeout(() => {
         this.isCardInteracting = false;
@@ -661,25 +778,25 @@ export class SearchApp extends LitElement {
     this.engineSelected = true;
     this.isCardInteracting = true; // 标记正在与卡片交互
     this.selectedEngine = engine;
-    
+
     // 不再自动执行搜索，只有用户按回车时才执行搜索
     // 让用户有机会看到自己选择的引擎和修改查询文本
-    
+
     this.requestUpdate();
-    
+
     // 更新搜索框中的占位符文本
-    const searchField = this.shadowRoot.querySelector('md-outlined-text-field');
+    const searchField = this.shadowRoot.querySelector("md-outlined-text-field");
     if (searchField) {
       searchField.placeholder = this._getSearchPlaceholder();
     }
-    
+
     // 清除之前可能存在的定时器
     clearTimeout(this._focusTimeout);
     this._focusTimeout = setTimeout(() => {
       if (searchField) {
         searchField.focus();
       }
-      
+
       // 保持卡片交互状态一段时间，以便用户可以继续操作
       setTimeout(() => {
         this.isCardInteracting = false;
@@ -688,11 +805,12 @@ export class SearchApp extends LitElement {
   }
 
   _getFilteredEngines() {
-    if (this.selectedCategory === 'all') {
+    if (this.selectedCategory === "all") {
       return this.searchEngines;
     }
-    return this.searchEngines.filter(engine => 
-      engine.categories.includes(this.selectedCategory));
+    return this.searchEngines.filter((engine) =>
+      engine.categories.includes(this.selectedCategory)
+    );
   }
 
   _getEngineInitial(name) {
@@ -705,14 +823,14 @@ export class SearchApp extends LitElement {
     if (!this.selectedEngine) {
       return "Mvianav 搜索...";
     }
-    
+
     const engineName = this.selectedEngine.name;
     return `${engineName}一下，你就知道${engineName}知道得很多......`;
   }
 
   render() {
     const filteredEngines = this._getFilteredEngines();
-    
+
     return html`
       <div class="search-container">
         <div class="search-field-container">
@@ -728,57 +846,82 @@ export class SearchApp extends LitElement {
             .value="${this.searchText}"
           ></md-outlined-text-field>
         </div>
-        
+
         <!-- 引擎卡片：包含搜索引擎信息和分类选择器 -->
-        <div class="engine-card" 
-          @mousedown="${() => { this.isCardInteracting = true; }}"
-          @touchstart="${() => { this.isCardInteracting = true; }}"
+        <div
+          class="engine-card"
+          @mousedown="${() => {
+            this.isCardInteracting = true;
+          }}"
+          @touchstart="${() => {
+            this.isCardInteracting = true;
+          }}"
         >
           <!-- 搜索引擎显示区域 -->
           <div class="engine-display">
             <div class="engine-display-text">
-              <div class="engine-display-icon">${this.selectedEngine ? this._getEngineInitial(this.selectedEngine.name) : 'M'}</div>
-              ${this.selectedEngine ? this.selectedEngine.name : 'Mvianav 搜索引擎'}
+              <div class="engine-display-icon">
+                ${this.selectedEngine
+                  ? this._getEngineInitial(this.selectedEngine.name)
+                  : "M"}
+              </div>
+              ${this.selectedEngine
+                ? this.selectedEngine.name
+                : "Mvianav 搜索引擎"}
             </div>
           </div>
-          
+
           <!-- 统一内容区域：包含分类选择器和引擎显示板 -->
           <div class="unified-content">
             <!-- 分类选择器，总是显示 -->
             <div class="category-selector">
               <md-tabs>
-                ${this.categories.map(category => html`
-                  <md-primary-tab 
-                    ?active="${this.selectedCategory === category.id}"
-                    @click="${() => this._handleCategorySelect(category.id)}"
-                  >
-                    ${category.name}
-                  </md-primary-tab>
-                `)}
+                ${this.categories.map(
+                  (category) => html`
+                    <md-primary-tab
+                      ?active="${this.selectedCategory === category.id}"
+                      @click="${() => this._handleCategorySelect(category.id)}"
+                    >
+                      ${category.name}
+                    </md-primary-tab>
+                  `
+                )}
               </md-tabs>
             </div>
-            
+
             <!-- 搜索引擎显示板，总是显示 -->
             <div class="scroll-container">
-              ${this.isLoading ? 
-                html`<div class="loading"><div class="loading-spinner"></div></div>` :
-                html`
-                  <div class="engines-display">
-                    ${filteredEngines.map(engine => html`
-                      <div 
-                        class="engine-item ${this.selectedEngine && this.selectedEngine.id === engine.id ? 'selected' : ''}"
-                        @click="${() => this._handleEngineSelect(engine)}"
-                        @mousedown="${() => { this.isCardInteracting = true; }}"
-                        @touchstart="${() => { this.isCardInteracting = true; }}"
-                      >
-                        <md-ripple></md-ripple>
-                        <div class="engine-icon">${this._getEngineInitial(engine.name)}</div>
-                        <div class="engine-name">${engine.name}</div>
-                      </div>
-                    `)}
-                  </div>
-                `
-              }
+              ${this.isLoading
+                ? html`<div class="loading">
+                    <div class="loading-spinner"></div>
+                  </div>`
+                : html`
+                    <div class="engines-display">
+                      ${filteredEngines.map(
+                        (engine) => html`
+                          <div
+                            class="engine-item ${this.selectedEngine &&
+                            this.selectedEngine.id === engine.id
+                              ? "selected"
+                              : ""}"
+                            @click="${() => this._handleEngineSelect(engine)}"
+                            @mousedown="${() => {
+                              this.isCardInteracting = true;
+                            }}"
+                            @touchstart="${() => {
+                              this.isCardInteracting = true;
+                            }}"
+                          >
+                            <md-ripple></md-ripple>
+                            <div class="engine-icon">
+                              ${this._getEngineInitial(engine.name)}
+                            </div>
+                            <div class="engine-name">${engine.name}</div>
+                          </div>
+                        `
+                      )}
+                    </div>
+                  `}
             </div>
           </div>
         </div>
@@ -787,4 +930,4 @@ export class SearchApp extends LitElement {
   }
 }
 
-customElements.define('search-app', SearchApp); 
+customElements.define("search-app", SearchApp);

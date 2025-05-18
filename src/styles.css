@@ -2,6 +2,7 @@
   box-sizing: border-box;
   margin: 0;
   padding: 0;
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
 }
 
 body {
@@ -10,9 +11,21 @@ body {
   display: flex;
   justify-content: center;
   align-items: center;
-  background-color: #fff;
   position: relative;
   overflow-x: hidden;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* 浅色模式 */
+body.light-theme {
+  background-color: var(--md-sys-color-background, #fff);
+  color: var(--md-sys-color-on-background, #1c1b1f);
+}
+
+/* 深色模式 */
+body.dark-theme {
+  background-color: var(--md-sys-color-background, #1c1b1f);
+  color: var(--md-sys-color-on-background, #e6e1e5);
 }
 
 .search-container {
@@ -41,4 +54,20 @@ md-outlined-text-field input {
   margin-top: 44px; /* 搜索框高度 */
   width: 100%;
   max-width: 584px; /* 与搜索框宽度一致 */
+}
+
+/* 深色模式下的文本输入颜色 */
+body.dark-theme input,
+body.dark-theme textarea {
+  color: var(--md-sys-color-on-surface, #e6e1e5);
+}
+
+/* 确保链接在深色模式下有适当的颜色 */
+body.dark-theme a {
+  color: var(--md-sys-color-primary, #d0bcff);
+}
+
+/* 应用平滑过渡到所有元素 */
+* {
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
 } 

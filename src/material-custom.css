@@ -1,5 +1,69 @@
 /* Material Web 组件自定义样式 */
 
+/* 浅色主题 (Light Theme) */
+body.light-theme {
+  --md-sys-color-primary: #6750A4; /* Purple */
+  --md-sys-color-on-primary: #FFFFFF;
+  --md-sys-color-primary-container: #EADDFF;
+  --md-sys-color-on-primary-container: #21005D;
+  --md-sys-color-secondary: #625B71;
+  --md-sys-color-on-secondary: #FFFFFF;
+  --md-sys-color-secondary-container: #E8DEF8;
+  --md-sys-color-on-secondary-container: #1D192B;
+  --md-sys-color-tertiary: #7D5260;
+  --md-sys-color-on-tertiary: #FFFFFF;
+  --md-sys-color-tertiary-container: #FFD8E4;
+  --md-sys-color-on-tertiary-container: #31111D;
+  --md-sys-color-error: #B3261E;
+  --md-sys-color-on-error: #FFFFFF;
+  --md-sys-color-error-container: #F9DEDC;
+  --md-sys-color-on-error-container: #410E0B;
+  --md-sys-color-background: #FFFBFE;
+  --md-sys-color-on-background: #1C1B1F;
+  --md-sys-color-surface: #FFFBFE;
+  --md-sys-color-on-surface: #1C1B1F;
+  --md-sys-color-surface-variant: #E7E0EC;
+  --md-sys-color-on-surface-variant: #49454F;
+  --md-sys-color-outline: #79747E;
+  --md-sys-color-shadow: #000000;
+  --md-sys-color-surface-tint-layer: rgba(103, 80, 164, 0.08); /* Primary color with opacity */
+  --md-sys-color-inverse-surface: #313033;
+  --md-sys-color-inverse-on-surface: #F4EFF4;
+  --md-sys-color-inverse-primary: #D0BCFF;
+}
+
+/* 深色主题 (Dark Theme) */
+body.dark-theme {
+  --md-sys-color-primary: #D0BCFF; /* Light Purple */
+  --md-sys-color-on-primary: #381E72;
+  --md-sys-color-primary-container: #4F378B;
+  --md-sys-color-on-primary-container: #EADDFF;
+  --md-sys-color-secondary: #CCC2DC;
+  --md-sys-color-on-secondary: #332D41;
+  --md-sys-color-secondary-container: #4A4458;
+  --md-sys-color-on-secondary-container: #E8DEF8;
+  --md-sys-color-tertiary: #EFB8C8;
+  --md-sys-color-on-tertiary: #492532;
+  --md-sys-color-tertiary-container: #633B48;
+  --md-sys-color-on-tertiary-container: #FFD8E4;
+  --md-sys-color-error: #F2B8B5;
+  --md-sys-color-on-error: #601410;
+  --md-sys-color-error-container: #8C1D18;
+  --md-sys-color-on-error-container: #F9DEDC;
+  --md-sys-color-background: #1C1B1F;
+  --md-sys-color-on-background: #E6E1E5;
+  --md-sys-color-surface: #1C1B1F;
+  --md-sys-color-on-surface: #E6E1E5;
+  --md-sys-color-surface-variant: #49454F;
+  --md-sys-color-on-surface-variant: #CAC4D0;
+  --md-sys-color-outline: #938F99;
+  --md-sys-color-shadow: #000000;
+  --md-sys-color-surface-tint-layer: rgba(208, 188, 255, 0.08); /* Primary color (light) with opacity */
+  --md-sys-color-inverse-surface: #E6E1E5;
+  --md-sys-color-inverse-on-surface: #313033;
+  --md-sys-color-inverse-primary: #6750A4;
+}
+
 /* 搜索框居中样式 */
 md-outlined-text-field::part(input-wrapper),
 md-outlined-text-field::part(input) {
@@ -33,4 +97,151 @@ md-outlined-text-field input::placeholder {
 .search-sidebar::-webkit-scrollbar-thumb {
   background-color: rgba(0, 0, 0, 0.2);
   border-radius: 3px;
+}
+
+/* 确保 search-app 组件的背景和文本颜色也使用这些变量 */
+:host {
+  /* ... 您在 search-app.js 中已有的 :host 样式 ... */
+  background-color: var(--md-sys-color-background);
+  color: var(--md-sys-color-on-background);
+}
+
+/* 确保 md-outlined-text-field 使用主题颜色 */
+md-outlined-text-field {
+  --md-outlined-text-field-container-color: var(--md-sys-color-surface);
+  --md-outlined-text-field-input-text-color: var(--md-sys-color-on-surface);
+  --md-outlined-text-field-label-text-color: var(--md-sys-color-on-surface-variant);
+  --md-outlined-text-field-outline-color: var(--md-sys-color-outline);
+  --md-outlined-text-field-focus-outline-color: var(--md-sys-color-primary);
+  --md-outlined-text-field-hover-outline-color: var(--md-sys-color-on-surface-variant); 
+  /* ... 其他 md-outlined-text-field 可能需要的颜色变量 ... */
+}
+
+/* 确保 md-tabs 和 md-primary-tab 使用主题颜色 */
+md-tabs {
+  --md-primary-tab-container-color: var(--md-sys-color-surface);
+  --md-primary-tab-label-text-color: var(--md-sys-color-on-surface-variant);
+  --md-primary-tab-active-indicator-color: var(--md-sys-color-primary);
+  --md-primary-tab-active-label-text-color: var(--md-sys-color-primary);
+  --md-primary-tab-hover-state-layer-color: var(--md-sys-color-primary);
+  --md-primary-tab-focus-state-layer-color: var(--md-sys-color-primary);
+  --md-primary-tab-pressed-state-layer-color: var(--md-sys-color-primary);
+}
+
+/* 如果您的 engine-item, engine-icon 等也需要根据主题调整，请在此处添加样式 */
+body.light-theme .engine-item {
+  background-color: #f8f8f8; /* 或使用 --md-sys-color-surface-variant 等 */
+  color: var(--md-sys-color-on-surface-variant);
+}
+
+body.light-theme .engine-icon {
+  background-color: #fff; /* 或使用 --md-sys-color-surface */
+  color: var(--md-sys-color-primary);
+}
+
+body.dark-theme .engine-item {
+  background-color: var(--md-sys-color-surface-variant); 
+  color: var(--md-sys-color-on-surface-variant);
+}
+
+body.dark-theme .engine-icon {
+  background-color: var(--md-sys-color-surface);
+  color: var(--md-sys-color-primary);
+}
+
+/* 更新 engine-display 的背景和文本颜色 */
+body.light-theme .engine-display {
+    background-color: var(--md-sys-color-surface);
+    color: var(--md-sys-color-primary);
+    border-bottom: 1px solid var(--md-sys-color-outline); /* 使用 outline 作为边框颜色 */
+}
+
+body.dark-theme .engine-display {
+    background-color: var(--md-sys-color-surface);
+    color: var(--md-sys-color-primary);
+    border-bottom: 1px solid var(--md-sys-color-outline);
+}
+
+body.light-theme .engine-display-icon {
+    background-color: var(--md-sys-color-primary);
+    color: var(--md-sys-color-on-primary);
+}
+body.dark-theme .engine-display-icon {
+    background-color: var(--md-sys-color-primary);
+    color: var(--md-sys-color-on-primary);
+}
+
+/* Placeholder text color for text field */
+md-outlined-text-field::part(input)::placeholder {
+  color: var(--md-sys-color-on-surface-variant);
+  opacity: 0.6; /* Or adjust as needed */
+}
+md-outlined-text-field::part(input)::-moz-placeholder {
+  color: var(--md-sys-color-on-surface-variant);
+  opacity: 0.6;
+}
+md-outlined-text-field::part(input)::-webkit-input-placeholder {
+  color: var(--md-sys-color-on-surface-variant);
+  opacity: 0.6;
+}
+md-outlined-text-field::part(input)::-ms-input-placeholder {
+  color: var(--md-sys-color-on-surface-variant);
+  opacity: 0.6;
+}
+
+/* Scrollbar colors */
+body.light-theme .scroll-container {
+    scrollbar-color: #ccc transparent; /* Or use theme variables */
+}
+body.light-theme .scroll-container::-webkit-scrollbar-thumb {
+    background-color: #ccc; /* Or use theme variables */
+}
+
+body.dark-theme .scroll-container {
+    scrollbar-color: var(--md-sys-color-on-surface-variant) transparent;
+}
+body.dark-theme .scroll-container::-webkit-scrollbar-thumb {
+    background-color: var(--md-sys-color-on-surface-variant);
+}
+
+/* Loading spinner color */
+.loading-spinner {
+    border-top-color: var(--md-sys-color-primary);
+}
+
+/* 更新 engine-card 样式以适应深色模式 */
+body.dark-theme .engine-card {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+/* 更新卡片项目在深色模式下的阴影 */
+body.dark-theme .engine-item {
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+body.dark-theme .engine-item:hover {
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.25);
+}
+
+/* 确保搜索框在深色模式下有正确的外观 */
+body.dark-theme md-outlined-text-field {
+  --md-outlined-text-field-input-text-color: var(--md-sys-color-on-surface);
+  --md-outlined-text-field-outline-color: var(--md-sys-color-outline);
+  --md-outlined-text-field-hover-outline-color: var(--md-sys-color-on-surface-variant);
+}
+
+/* 修复搜索框在深色模式下的背景颜色 */
+body.dark-theme md-outlined-text-field::part(field) {
+  background-color: var(--md-sys-color-surface);
+}
+
+/* 应用主题颜色到整个页面 */
+body.dark-theme {
+  background-color: var(--md-sys-color-background);
+  color: var(--md-sys-color-on-background);
+}
+
+body.light-theme {
+  background-color: var(--md-sys-color-background);
+  color: var(--md-sys-color-on-background);
 } 
