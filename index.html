@@ -2,79 +2,105 @@
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Mvianav</title>
-  <link rel="stylesheet" href="./src/material-custom.css">
-  <link rel="stylesheet" href="./src/styles.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Mvianav搜索</title>
   <style>
+    /* 设置全局样式，确保应用占满整个视口 */
     html, body {
-      margin: 0;
-      padding: 0;
       width: 100%;
       height: 100%;
-      font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
-      transition: background-color 0.3s ease, color 0.3s ease;
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
     }
 
-    body {
-      background-color: var(--md-sys-color-background, #f7f9fc);
-      color: var(--md-sys-color-on-background, #1c1b1f);
+    /* 深色模式系统颜色 */
+    :root {
+      --md-sys-color-primary: #6750A4;
+      --md-sys-color-on-primary: #FFFFFF;
+      --md-sys-color-primary-container: #EADDFF;
+      --md-sys-color-on-primary-container: #21005E;
+      --md-sys-color-secondary: #625B71;
+      --md-sys-color-on-secondary: #FFFFFF;
+      --md-sys-color-secondary-container: #E8DEF8;
+      --md-sys-color-on-secondary-container: #1E192B;
+      --md-sys-color-tertiary: #7D5260;
+      --md-sys-color-on-tertiary: #FFFFFF;
+      --md-sys-color-tertiary-container: #FFD8E4;
+      --md-sys-color-on-tertiary-container: #370B1E;
+      --md-sys-color-error: #B3261E;
+      --md-sys-color-on-error: #FFFFFF;
+      --md-sys-color-error-container: #F9DEDC;
+      --md-sys-color-on-error-container: #370B1E;
+      --md-sys-color-background: #FFFBFE;
+      --md-sys-color-on-background: #1C1B1F;
+      --md-sys-color-surface: #FFFBFE;
+      --md-sys-color-on-surface: #1C1B1F;
+      --md-sys-color-surface-variant: #E7E0EC;
+      --md-sys-color-on-surface-variant: #49454E;
+      --md-sys-color-outline: #79747E;
+      --md-sys-color-shadow: #000000;
     }
 
-    .container {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      width: 600px;
-      max-width: 92%;
+    /* 浅色模式（默认）*/
+    body.light-theme {
+      background-color: var(--md-sys-color-background);
+      color: var(--md-sys-color-on-background);
     }
 
-    /* 响应式布局 */
-    @media screen and (min-width: 1200px) {
-      .container {
-        width: 700px;
-      }
+    /* 深色模式主题 */
+    body.dark-theme {
+      --md-sys-color-primary: #D0BCFF;
+      --md-sys-color-on-primary: #371E73;
+      --md-sys-color-primary-container: #4F378B;
+      --md-sys-color-on-primary-container: #EADDFF;
+      --md-sys-color-secondary: #CCC2DC;
+      --md-sys-color-on-secondary: #332D41;
+      --md-sys-color-secondary-container: #4A4458;
+      --md-sys-color-on-secondary-container: #E8DEF8;
+      --md-sys-color-tertiary: #EFB8C8;
+      --md-sys-color-on-tertiary: #492532;
+      --md-sys-color-tertiary-container: #633B48;
+      --md-sys-color-on-tertiary-container: #FFD8E4;
+      --md-sys-color-error: #F2B8B5;
+      --md-sys-color-on-error: #601410;
+      --md-sys-color-error-container: #8C1D18;
+      --md-sys-color-on-error-container: #F9DEDC;
+      --md-sys-color-background: #1C1B1F;
+      --md-sys-color-on-background: #E6E1E5;
+      --md-sys-color-surface: #1C1B1F;
+      --md-sys-color-on-surface: #E6E1E5;
+      --md-sys-color-surface-variant: #49454F;
+      --md-sys-color-on-surface-variant: #CAC4D0;
+      --md-sys-color-outline: #938F99;
+      --md-sys-color-shadow: #000000;
+      
+      background-color: var(--md-sys-color-background);
+      color: var(--md-sys-color-on-background);
     }
 
-    @media screen and (max-width: 600px) {
-      .container {
-        width: 92%;
-      }
+    /* 应用容器样式 */
+    #app {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* 搜索组件样式 */
+    search-app {
+      width: 100%;
+      height: 100%;
+      display: block;
     }
   </style>
-  <script>
-    // 在 DOM 加载之前立即检测并应用主题，防止闪烁
-    (function() {
-      const prefersDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
-      if (prefersDarkMode) {
-        document.documentElement.classList.add('dark-theme');
-        document.body.classList.add('dark-theme');
-      } else {
-        document.documentElement.classList.add('light-theme');
-        document.body.classList.add('light-theme');
-      }
-      
-      // 监听系统主题变化
-      window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
-        if (e.matches) {
-          document.documentElement.classList.remove('light-theme');
-          document.documentElement.classList.add('dark-theme');
-          document.body.classList.remove('light-theme');
-          document.body.classList.add('dark-theme');
-        } else {
-          document.documentElement.classList.remove('dark-theme');
-          document.documentElement.classList.add('light-theme');
-          document.body.classList.remove('dark-theme');
-          document.body.classList.add('light-theme');
-        }
-      });
-    })();
-  </script>
   <script type="module" src="./src/search-app.js"></script>
 </head>
 <body>
-  <div class="container">
+  <div id="app">
     <search-app></search-app>
   </div>
 </body>

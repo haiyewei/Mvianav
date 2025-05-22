@@ -20,6 +20,8 @@ export class SearchApp extends LitElement {
     categorySelected: { type: Boolean },
     loadError: { type: Boolean },
     isCardInteracting: { type: Boolean },
+    isMobileDevice: { type: Boolean },
+    readonlyInput: { type: Boolean },
   };
 
   constructor() {
@@ -36,6 +38,8 @@ export class SearchApp extends LitElement {
     this.categorySelected = false;
     this.loadError = false;
     this.isCardInteracting = false;
+    this.isMobileDevice = this._detectMobileDevice();
+    this.readonlyInput = this.isMobileDevice; // 移动设备默认设置为只读状态
     this._loadSearchEngines();
     this._initTheme();
   }
@@ -54,7 +58,7 @@ export class SearchApp extends LitElement {
       document.body.classList.add("light-theme");
       document.body.classList.remove("dark-theme");
     }
-    
+
     // 添加一个短暂延迟确保 CSS 变量已被应用到 body 上
     setTimeout(() => this._updateThemeVariables(), 10);
   };
@@ -76,7 +80,10 @@ export class SearchApp extends LitElement {
     this._themeObserver = new MutationObserver(() => {
       this._updateThemeVariables();
     });
-    this._themeObserver.observe(document.body, { attributes: true, attributeFilter: ['class'] });
+    this._themeObserver.observe(document.body, {
+      attributes: true,
+      attributeFilter: ["class"],
+    });
   }
 
   disconnectedCallback() {
@@ -94,19 +101,37 @@ export class SearchApp extends LitElement {
   _updateThemeVariables() {
     // 从 document.body 计算样式
     const computedStyle = getComputedStyle(document.body);
-    
+
     // 主要颜色变量列表
     const themeVars = [
-      "primary", "on-primary", "primary-container", "on-primary-container",
-      "secondary", "on-secondary", "secondary-container", "on-secondary-container",
-      "tertiary", "on-tertiary", "tertiary-container", "on-tertiary-container",
-      "error", "on-error", "error-container", "on-error-container",
-      "background", "on-background", "surface", "on-surface", 
-      "surface-variant", "on-surface-variant", "outline", "shadow"
+      "primary",
+      "on-primary",
+      "primary-container",
+      "on-primary-container",
+      "secondary",
+      "on-secondary",
+      "secondary-container",
+      "on-secondary-container",
+      "tertiary",
+      "on-tertiary",
+      "tertiary-container",
+      "on-tertiary-container",
+      "error",
+      "on-error",
+      "error-container",
+      "on-error-container",
+      "background",
+      "on-background",
+      "surface",
+      "on-surface",
+      "surface-variant",
+      "on-surface-variant",
+      "outline",
+      "shadow",
     ];
-    
+
     // 为每个变量创建 CSS 自定义属性
-    themeVars.forEach(varName => {
+    themeVars.forEach((varName) => {
       const cssVarName = `--md-sys-color-${varName}`;
       const value = computedStyle.getPropertyValue(cssVarName).trim();
       if (value) {
@@ -118,7 +143,46 @@ export class SearchApp extends LitElement {
   async _loadSearchEngines() {
     try {
       this.isLoading = true;
-      // 尝试多种可能的路径
+
+      // GitHub原始内容URL
+      const githubRawUrl =
+        "https://raw.githubusercontent.com/haiyewei/Mvianav/main/public/search-engines.json";
+
+      // 首先尝试从GitHub加载
+      try {
+        console.log(`尝试从GitHub加载配置: ${githubRawUrl}`);
+        const response = await fetch(githubRawUrl);
+        if (response.ok) {
+          console.log(`成功从GitHub加载配置`);
+          const data = await response.json();
+          this.categories = data.categories;
+          this.searchEngines = data.engines;
+
+          // 设置默认选中的搜索引擎为第一个常用搜索引擎
+          const defaultEngine = this.searchEngines.find((engine) =>
+            engine.categories.includes(this.selectedCategory)
+          );
+          this.selectedEngine = defaultEngine || this.searchEngines[0];
+          this.isLoading = false;
+          this.loadError = false;
+
+          // 引擎加载完成后，更新搜索框的提示文字
+          this.updateAfterNextRender(() => {
+            const searchField = this.shadowRoot.querySelector(
+              "md-outlined-text-field"
+            );
+            if (searchField) {
+              searchField.placeholder = this._getSearchPlaceholder();
+            }
+          });
+          return; // 成功加载后直接返回
+        }
+      } catch {
+        // 静默处理GitHub加载错误，直接尝试本地文件
+        console.log("尝试使用本地配置文件");
+      }
+
+      // 如果GitHub加载失败，尝试本地路径作为备份
       let response;
       const possiblePaths = [
         "./search-engines.json",
@@ -136,10 +200,10 @@ export class SearchApp extends LitElement {
       let loadError = null;
       for (const path of possiblePaths) {
         try {
-          console.log(`尝试加载路径: ${path}`);
+          console.log(`尝试加载本地路径: ${path}`);
           response = await fetch(path);
           if (response.ok) {
-            console.log(`成功从路径加载: ${path}`);
+            console.log(`成功从本地路径加载: ${path}`);
             loadError = null;
             break;
           }
@@ -296,6 +360,8 @@ export class SearchApp extends LitElement {
 
   _handleFocus() {
     this.isFocused = true;
+    // 在移动设备上，用户点击搜索框后，不会立即允许输入
+    // 而是先显示搜索引擎列表，当用户真正需要输入时再启用输入功能
   }
 
   _handleBlur(_e) {
@@ -322,6 +388,11 @@ export class SearchApp extends LitElement {
       }
 
       this.isFocused = false;
+      
+      // 在移动设备上，当失去焦点时，将输入框重置为只读
+      if (this.isMobileDevice) {
+        this.readonlyInput = true;
+      }
     }, 100); // 增加延迟时间，给用户更多的操作时间
   }
 
@@ -332,6 +403,32 @@ export class SearchApp extends LitElement {
       this.setAttribute("hasText", "");
     } else {
       this.removeAttribute("hasText");
+    }
+  }
+  
+  // 新增：处理搜索框的点击事件
+  _handleSearchFieldClick() {
+    // 仅在移动设备上特殊处理
+    if (this.isMobileDevice) {
+      // 首次点击只是打开卡片，不启用输入
+      if (this.readonlyInput && !this.hasText) {
+        // 阻止默认行为，防止唤起键盘
+        this.isFocused = true;
+      }
+    }
+  }
+  
+  // 新增：激活输入模式
+  _activateInputMode() {
+    if (this.isMobileDevice && this.readonlyInput) {
+      this.readonlyInput = false;
+      // 在状态更新后，聚焦输入框
+      this.updateAfterNextRender(() => {
+        const searchField = this.shadowRoot.querySelector("md-outlined-text-field");
+        if (searchField) {
+          searchField.focus();
+        }
+      });
     }
   }
 
@@ -357,6 +454,9 @@ export class SearchApp extends LitElement {
     :host {
       display: block;
       width: 100%;
+      height: 100%;
+      max-width: 100vw;
+      max-height: 100vh;
       --primary-color: var(--md-sys-color-primary, #6750A4);
       --on-primary-color: var(--md-sys-color-on-primary, #FFFFFF);
       --surface-color: var(--md-sys-color-surface, #FFFBFE);
@@ -366,11 +466,24 @@ export class SearchApp extends LitElement {
       color: var(--md-sys-color-on-background, #1C1B1F);
     }
 
+    .app-container {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      width: 100%;
+      height: 100%;
+      padding: 16px;
+      box-sizing: border-box;
+      overflow: hidden;
+    }
+
     .search-container {
       display: flex;
       flex-direction: column;
       align-items: center;
       width: 100%;
+      max-width: 800px;
       margin: 0 auto;
       padding: 0;
       position: relative;
@@ -559,6 +672,11 @@ export class SearchApp extends LitElement {
     
     /* 移动设备适配 */
     @media (max-width: 480px) {
+      .search-container {
+        width: 100%;
+        padding: 0 12px;
+      }
+      
       .engines-display {
         grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
         gap: 8px;
@@ -577,6 +695,20 @@ export class SearchApp extends LitElement {
       
       .engine-name {
         font-size: 12px;
+      }
+    }
+    
+    /* 平板设备适配 */
+    @media (min-width: 481px) and (max-width: 768px) {
+      .search-container {
+        max-width: 600px;
+      }
+    }
+    
+    /* 桌面设备适配 */
+    @media (min-width: 769px) {
+      .search-container {
+        max-width: 800px;
       }
     }
     
@@ -828,100 +960,128 @@ export class SearchApp extends LitElement {
     return `${engineName}一下，你就知道${engineName}知道得很多......`;
   }
 
+  // 检测是否为移动设备
+  _detectMobileDevice() {
+    const userAgent = navigator.userAgent || navigator.vendor || window.opera;
+    
+    // 检查是否为移动设备的正则表达式
+    const mobileRegex = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i;
+    
+    // 检查是否为触摸设备
+    const hasTouchScreen = (
+      ('maxTouchPoints' in navigator && navigator.maxTouchPoints > 0) ||
+      ('msMaxTouchPoints' in navigator && navigator.msMaxTouchPoints > 0) ||
+      (window.matchMedia && window.matchMedia('(pointer:coarse)').matches)
+    );
+    
+    return mobileRegex.test(userAgent) || hasTouchScreen;
+  }
+
   render() {
     const filteredEngines = this._getFilteredEngines();
 
     return html`
-      <div class="search-container">
-        <div class="search-field-container">
-          <md-outlined-text-field
-            placeholder="${this._getSearchPlaceholder()}"
-            type="search"
-            style="text-align: center;"
-            class="centered-text"
-            @focus="${this._handleFocus}"
-            @blur="${this._handleBlur}"
-            @input="${this._handleInput}"
-            @keydown="${this._handleSearch}"
-            .value="${this.searchText}"
-          ></md-outlined-text-field>
-        </div>
-
-        <!-- 引擎卡片：包含搜索引擎信息和分类选择器 -->
-        <div
-          class="engine-card"
-          @mousedown="${() => {
-            this.isCardInteracting = true;
-          }}"
-          @touchstart="${() => {
-            this.isCardInteracting = true;
-          }}"
-        >
-          <!-- 搜索引擎显示区域 -->
-          <div class="engine-display">
-            <div class="engine-display-text">
-              <div class="engine-display-icon">
-                ${this.selectedEngine
-                  ? this._getEngineInitial(this.selectedEngine.name)
-                  : "M"}
-              </div>
-              ${this.selectedEngine
-                ? this.selectedEngine.name
-                : "Mvianav 搜索引擎"}
-            </div>
+      <div class="app-container">
+        <div class="search-container">
+          <div class="search-field-container">
+            <md-outlined-text-field
+              placeholder="${this._getSearchPlaceholder()}"
+              type="search"
+              style="text-align: center;"
+              class="centered-text"
+              ?readonly="${this.isMobileDevice && this.readonlyInput}"
+              @focus="${this._handleFocus}"
+              @blur="${this._handleBlur}"
+              @input="${this._handleInput}"
+              @keydown="${this._handleSearch}"
+              @click="${this._handleSearchFieldClick}"
+              .value="${this.searchText}"
+            ></md-outlined-text-field>
           </div>
 
-          <!-- 统一内容区域：包含分类选择器和引擎显示板 -->
-          <div class="unified-content">
-            <!-- 分类选择器，总是显示 -->
-            <div class="category-selector">
-              <md-tabs>
-                ${this.categories.map(
-                  (category) => html`
-                    <md-primary-tab
-                      ?active="${this.selectedCategory === category.id}"
-                      @click="${() => this._handleCategorySelect(category.id)}"
-                    >
-                      ${category.name}
-                    </md-primary-tab>
-                  `
-                )}
-              </md-tabs>
+          <!-- 引擎卡片：包含搜索引擎信息和分类选择器 -->
+          <div
+            class="engine-card"
+            @mousedown="${() => {
+              this.isCardInteracting = true;
+            }}"
+            @touchstart="${() => {
+              this.isCardInteracting = true;
+            }}"
+          >
+            <!-- 搜索引擎显示区域 -->
+            <div class="engine-display">
+              <div class="engine-display-text">
+                <div class="engine-display-icon">
+                  ${this.selectedEngine
+                    ? this._getEngineInitial(this.selectedEngine.name)
+                    : "M"}
+                </div>
+                ${this.selectedEngine
+                  ? this.selectedEngine.name
+                  : "Mvianav 搜索引擎"}
+              </div>
+              
+              ${this.isMobileDevice ? html`
+                <md-text-button
+                  @click="${this._activateInputMode}"
+                  ?disabled="${!this.readonlyInput}"
+                >输入</md-text-button>
+              ` : ''}
             </div>
 
-            <!-- 搜索引擎显示板，总是显示 -->
-            <div class="scroll-container">
-              ${this.isLoading
-                ? html`<div class="loading">
-                    <div class="loading-spinner"></div>
-                  </div>`
-                : html`
-                    <div class="engines-display">
-                      ${filteredEngines.map(
-                        (engine) => html`
-                          <div
-                            class="engine-item ${this.selectedEngine &&
-                            this.selectedEngine.id === engine.id
-                              ? "selected"
-                              : ""}"
-                            @click="${() => this._handleEngineSelect(engine)}"
-                            @mousedown="${() => {
-                              this.isCardInteracting = true;
-                            }}"
-                            @touchstart="${() => {
-                              this.isCardInteracting = true;
-                            }}"
-                          >
-                            <md-ripple></md-ripple>
-                            <div class="engine-icon">
-                              ${this._getEngineInitial(engine.name)}
+            <!-- 统一内容区域：包含分类选择器和引擎显示板 -->
+            <div class="unified-content">
+              <!-- 分类选择器，总是显示 -->
+              <div class="category-selector">
+                <md-tabs>
+                  ${this.categories.map(
+                    (category) => html`
+                      <md-primary-tab
+                        ?active="${this.selectedCategory === category.id}"
+                        @click="${() => this._handleCategorySelect(category.id)}"
+                      >
+                        ${category.name}
+                      </md-primary-tab>
+                    `
+                  )}
+                </md-tabs>
+              </div>
+
+              <!-- 搜索引擎显示板，总是显示 -->
+              <div class="scroll-container">
+                ${this.isLoading
+                  ? html`<div class="loading">
+                      <div class="loading-spinner"></div>
+                    </div>`
+                  : html`
+                      <div class="engines-display">
+                        ${filteredEngines.map(
+                          (engine) => html`
+                            <div
+                              class="engine-item ${this.selectedEngine &&
+                              this.selectedEngine.id === engine.id
+                                ? "selected"
+                                : ""}"
+                              @click="${() => this._handleEngineSelect(engine)}"
+                              @mousedown="${() => {
+                                this.isCardInteracting = true;
+                              }}"
+                              @touchstart="${() => {
+                                this.isCardInteracting = true;
+                              }}"
+                            >
+                              <md-ripple></md-ripple>
+                              <div class="engine-icon">
+                                ${this._getEngineInitial(engine.name)}
+                              </div>
+                              <div class="engine-name">${engine.name}</div>
                             </div>
-                            <div class="engine-name">${engine.name}</div>
-                          </div>
-                        `
-                      )}
-                    </div>
-                  `}
+                          `
+                        )}
+                      </div>
+                    `}
+              </div>
             </div>
           </div>
         </div>
